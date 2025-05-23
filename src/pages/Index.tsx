@@ -180,6 +180,13 @@ const Index = () => {
                     Contact
                   </Link>
                 </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/topics" className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    darkMode ? 'text-white hover:bg-white/10' : 'text-gray-700 hover:bg-black/5'
+                  }`}>
+                    Topics
+                  </Link>
+                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
             
@@ -266,7 +273,7 @@ const Index = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/quiz">
+              <Link to="/topics">
                 <Button size="lg" className={`relative overflow-hidden group ${
                   darkMode 
                     ? 'bg-blue-600 hover:bg-blue-700' 
@@ -440,7 +447,7 @@ const Index = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/quiz">
+              <Link to="/topics">
                 <Button size="lg" className={`relative overflow-hidden group ${
                   darkMode 
                     ? 'bg-blue-600 hover:bg-blue-700' 
