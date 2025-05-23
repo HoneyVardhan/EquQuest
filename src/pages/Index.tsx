@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Play } from 'lucide-react';
+import { Sun, Moon, Play, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
@@ -25,6 +25,20 @@ const Index = () => {
         >
           {darkMode ? <Sun size={24} /> : <Moon size={24} />}
         </button>
+      </div>
+
+      {/* Login Button */}
+      <div className="absolute top-6 left-6 z-10">
+        <Link
+          to="/auth"
+          className={`flex items-center space-x-2 p-3 rounded-full backdrop-blur-md transition-all duration-300 ${
+            darkMode 
+              ? 'bg-white/10 text-white hover:bg-white/20' 
+              : 'bg-white/60 text-gray-700 hover:bg-white/80'
+          }`}
+        >
+          <LogIn size={24} />
+        </Link>
       </div>
 
       {/* Main Content */}
