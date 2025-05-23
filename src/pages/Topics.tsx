@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, GraduationCap, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Sun, Moon, GraduationCap, ArrowLeft, ChevronRight, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
+import StreakBadge from '@/components/StreakBadge';
+import { getStreakData } from '@/utils/quizStorage';
 
 // Topic card data
 const topics = [
@@ -116,7 +118,7 @@ const TopicCard = ({ topic }) => {
         <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">{topic.name}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{topic.description}</p>
         
-        <Link to="/quiz">
+        <Link to={`/quiz/${topic.id}`}>
           <Button 
             className={`w-full relative overflow-hidden group bg-gradient-to-r ${topic.color} text-white hover:opacity-90`}
           >
@@ -143,6 +145,7 @@ const TopicCard = ({ topic }) => {
 
 const Topics = () => {
   const [darkMode, setDarkMode] = useState(false);
+  const [streak, setStreak] = useState(0);
   
   // Track mouse position for glow effects
   const handleMouseMove = (e) => {
@@ -151,6 +154,12 @@ const Topics = () => {
     document.documentElement.style.setProperty('--mouse-x', `${x}px`);
     document.documentElement.style.setProperty('--mouse-y', `${y}px`);
   };
+  
+  // Load streak data
+  useEffect(() => {
+    const streakData = getStreakData();
+    setStreak(streakData.currentStreak);
+  }, []);
 
   return (
     <div 
@@ -242,6 +251,11 @@ const Topics = () => {
               </NavigationMenuList>
             </NavigationMenu>
             
+            {/* Streak Display */}
+            {streak > 0 && (
+              <StreakBadge streak={streak} darkMode={darkMode} />
+            )}
+            
             {/* Dark Mode Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
@@ -272,6 +286,11 @@ const Topics = () => {
 
           {/* Mobile Navigation Button */}
           <div className="md:hidden flex items-center space-x-3">
+            {/* Streak Display (mobile) */}
+            {streak > 0 && (
+              <StreakBadge streak={streak} darkMode={darkMode} />
+            )}
+          
             {/* Dark Mode Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}

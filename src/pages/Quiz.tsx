@@ -1,22 +1,32 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Moon, Sun } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, Moon, Sun, Flame, Book } from 'lucide-react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import QuestionCard from '../components/QuestionCard';
 import ProgressBar from '../components/ProgressBar';
 import CooldownTimer from '../components/CooldownTimer';
 import Certificate from '../components/Certificate';
+import StreakBadge from '../components/StreakBadge';
+import SpecialQuestion from '../components/SpecialQuestion';
+import { allTopics } from '../data/questions';
+import { 
+  saveWrongAnswer, 
+  getSpecialQuestion, 
+  removeWrongAnswer, 
+  getStreakData,
+  updateStreak 
+} from '../utils/quizStorage';
+import { toast } from "sonner";
 
-interface Question {
-  id: number;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
+interface QuizParams {
+  topicId?: string;
 }
 
 const Quiz = () => {
+  const { topicId } = useParams<keyof QuizParams>() as QuizParams;
+  const navigate = useNavigate();
+  
   const [darkMode, setDarkMode] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<(number | null)[]>([]);
@@ -25,49 +35,32 @@ const Quiz = () => {
   const [isPremium] = useState(false); // Placeholder for premium logic
   const [cooldownActive, setCooldownActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [specialQuestion, setSpecialQuestion] = useState(null);
+  const [showSpecialQuestion, setShowSpecialQuestion] = useState(false);
+  
+  // Get topic and questions based on topicId
+  const topic = allTopics.find(t => t.id === topicId) || allTopics[0];
+  const questions = topic.questions;
 
-  // Sample quiz data
-  const questions: Question[] = [
-    {
-      id: 1,
-      question: "What is the capital of France?",
-      options: ["London", "Berlin", "Paris", "Madrid"],
-      correctAnswer: 2,
-      explanation: "Paris is the capital and largest city of France, known for its rich history, culture, and iconic landmarks like the Eiffel Tower."
-    },
-    {
-      id: 2,
-      question: "Which planet is known as the Red Planet?",
-      options: ["Venus", "Mars", "Jupiter", "Saturn"],
-      correctAnswer: 1,
-      explanation: "Mars is called the Red Planet due to iron oxide (rust) on its surface, giving it a reddish appearance."
-    },
-    {
-      id: 3,
-      question: "What is 15 × 8?",
-      options: ["110", "120", "130", "140"],
-      correctAnswer: 1,
-      explanation: "15 × 8 = 120. You can solve this by breaking it down: (10 × 8) + (5 × 8) = 80 + 40 = 120."
-    },
-    {
-      id: 4,
-      question: "Who wrote 'Romeo and Juliet'?",
-      options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"],
-      correctAnswer: 1,
-      explanation: "William Shakespeare wrote 'Romeo and Juliet' around 1594-1596. It's one of his most famous tragedies."
-    },
-    {
-      id: 5,
-      question: "What is the largest ocean on Earth?",
-      options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
-      correctAnswer: 3,
-      explanation: "The Pacific Ocean is the largest ocean, covering about 63 million square miles and containing more than half of the free water on Earth."
-    }
-  ];
-
+  // Initialize answers and streak
   useEffect(() => {
     if (selectedAnswers.length === 0) {
       setSelectedAnswers(new Array(questions.length).fill(null));
+    }
+    
+    // Load streak data
+    const streakData = getStreakData();
+    setStreak(streakData.currentStreak);
+    
+    // Check for special question of the day
+    const todaysSpecialQuestion = getSpecialQuestion();
+    if (todaysSpecialQuestion) {
+      setSpecialQuestion(todaysSpecialQuestion);
+      // Show special question after a short delay
+      setTimeout(() => {
+        setShowSpecialQuestion(true);
+      }, 1000);
     }
   }, [questions.length, selectedAnswers.length]);
 
@@ -77,7 +70,15 @@ const Quiz = () => {
     const newAnswers = [...selectedAnswers];
     newAnswers[currentQuestion] = answerIndex;
     setSelectedAnswers(newAnswers);
-    setShowExplanation(false);
+    setShowExplanation(true);
+    
+    // If answer is wrong, save to wrong answers
+    if (answerIndex !== questions[currentQuestion].correctAnswer) {
+      saveWrongAnswer(questions[currentQuestion], topic.id);
+      toast.error("Oops! That wasn't the right answer.");
+    } else {
+      toast.success("Great job! That's correct!");
+    }
   };
 
   const handleNextQuestion = () => {
@@ -90,6 +91,10 @@ const Quiz = () => {
       setCurrentQuestion(currentQuestion + 1);
       setShowExplanation(false);
     } else {
+      // Update streak when quiz is completed
+      const updatedStreakData = updateStreak();
+      setStreak(updatedStreakData.currentStreak);
+      
       setIsQuizComplete(true);
     }
   };
@@ -98,6 +103,30 @@ const Quiz = () => {
     if (selectedAnswers[currentQuestion] !== null) {
       setShowExplanation(!showExplanation);
     }
+  };
+
+  const handleSpecialQuestionAnswer = (isCorrect: boolean) => {
+    if (isCorrect && specialQuestion) {
+      // Remove from wrong answers if correctly answered
+      removeWrongAnswer(specialQuestion.question.id, specialQuestion.topicId);
+      toast.success("You mastered the question! It won't appear again.", {
+        duration: 5000
+      });
+    } else {
+      toast.info("Keep practicing! You'll get it next time.", {
+        duration: 5000
+      });
+    }
+    
+    // Hide special question after answering
+    setTimeout(() => {
+      setShowSpecialQuestion(false);
+      setSpecialQuestion(null);
+    }, 1000);
+  };
+
+  const dismissSpecialQuestion = () => {
+    setShowSpecialQuestion(false);
   };
 
   const canProceed = () => {
@@ -125,17 +154,22 @@ const Quiz = () => {
       {/* Header */}
       <div className="relative z-10 p-6">
         <div className="flex justify-between items-center max-w-4xl mx-auto">
-          <Link 
-            to="/"
-            className={`flex items-center space-x-2 px-4 py-2 rounded-full backdrop-blur-md transition-all duration-300 ${
-              darkMode 
-                ? 'bg-white/10 text-white hover:bg-white/20' 
-                : 'bg-white/60 text-gray-700 hover:bg-white/80'
-            }`}
-          >
-            <ArrowLeft size={20} />
-            <span>Back to Home</span>
-          </Link>
+          <div className="flex items-center space-x-4">
+            <Link 
+              to="/topics"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-full backdrop-blur-md transition-all duration-300 ${
+                darkMode 
+                  ? 'bg-white/10 text-white hover:bg-white/20' 
+                  : 'bg-white/60 text-gray-700 hover:bg-white/80'
+              }`}
+            >
+              <ArrowLeft size={20} />
+              <span>Back to Topics</span>
+            </Link>
+            
+            {/* Streak badge */}
+            <StreakBadge streak={streak} darkMode={darkMode} />
+          </div>
 
           <button
             onClick={() => setDarkMode(!darkMode)}
@@ -148,6 +182,13 @@ const Quiz = () => {
             {darkMode ? <Sun size={24} /> : <Moon size={24} />}
           </button>
         </div>
+      </div>
+
+      {/* Topic Title */}
+      <div className="text-center mb-6">
+        <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          {topic.name}
+        </h2>
       </div>
 
       {/* Progress Bar */}
@@ -211,6 +252,16 @@ const Quiz = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Special Question of the Day */}
+      {showSpecialQuestion && specialQuestion && (
+        <SpecialQuestion 
+          question={specialQuestion.question} 
+          onAnswerQuestion={handleSpecialQuestionAnswer}
+          onDismiss={dismissSpecialQuestion}
+          darkMode={darkMode}
+        />
+      )}
 
       {/* Footer */}
       <footer className={`fixed bottom-0 left-0 right-0 py-4 text-center transition-all duration-500 ${

@@ -1,62 +1,11 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Book, GraduationCap, Zap, ChevronRight, Mail, MessageSquare, Github, Users } from 'lucide-react';
+import { Sun, Moon, GraduationCap, ChevronRight, Mail, MessageSquare, Github, Users, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-
-// Topic card data
-const topics = [
-  { id: 'math', name: 'Math', icon: 'SquareEqual', color: 'from-blue-500 to-indigo-600', description: 'Algebra, Calculus, Geometry and more' },
-  { id: 'science', name: 'Science', icon: 'FlaskConical', color: 'from-green-500 to-emerald-600', description: 'Physics, Chemistry, Biology and more' },
-  { id: 'history', name: 'History', icon: 'Landmark', color: 'from-amber-500 to-yellow-600', description: 'Ancient civilizations, World Wars and more' },
-  { id: 'technology', name: 'Technology', icon: 'Cpu', color: 'from-purple-500 to-violet-600', description: 'Coding, AI, Cybersecurity and more' },
-  { id: 'language', name: 'Language', icon: 'Languages', color: 'from-red-500 to-pink-600', description: 'English, Spanish, French and more' },
-  { id: 'arts', name: 'Arts', icon: 'Paintbrush', color: 'from-cyan-500 to-teal-600', description: 'Drawing, Music, Dance and more' },
-];
-
-// Topic card component
-const TopicCard = ({ topic }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const IconComponent = React.lazy(() => import('lucide-react').then(mod => ({ default: mod[topic.icon] })));
-
-  return (
-    <Link 
-      to={`/topics/${topic.id}`}
-      className="relative group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <motion.div 
-        className={`h-full backdrop-blur-md bg-white/10 dark:bg-black/20 rounded-xl p-6 border border-white/20 dark:border-white/10 flex flex-col items-center justify-center text-center transition-all duration-300 overflow-hidden group-hover:border-white/40 dark:group-hover:border-white/20`}
-        whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
-        animate={isHovered ? { boxShadow: '0 0 25px rgba(255, 255, 255, 0.2)' } : { boxShadow: '0 0 0 rgba(0, 0, 0, 0)' }}
-      >
-        <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-gradient-to-br ${topic.color} shadow-lg`}>
-          <React.Suspense fallback={<div className="w-6 h-6 animate-pulse bg-white/20 rounded-full"></div>}>
-            <IconComponent className="w-6 h-6 text-white" />
-          </React.Suspense>
-        </div>
-        <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">{topic.name}</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-300">{topic.description}</p>
-        
-        {/* Glowing hover effect */}
-        <motion.div 
-          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none"
-          style={{ 
-            background: `radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), ${isHovered ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0)'}, transparent 40%)`,
-            zIndex: -1
-          }}
-          animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        />
-      </motion.div>
-    </Link>
-  );
-};
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 
 // Particle effect component
 const Particles = () => {
@@ -272,7 +221,7 @@ const Index = () => {
               Learn smarter, challenge yourself, earn certificates.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex justify-center">
               <Link to="/topics">
                 <Button size="lg" className={`relative overflow-hidden group ${
                   darkMode 
@@ -284,21 +233,6 @@ const Index = () => {
                   <div className="absolute inset-0 rounded-md bg-blue-400 opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-300" />
                 </Button>
               </Link>
-              
-              <Link to="/auth">
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className={`relative group ${
-                    darkMode 
-                      ? 'bg-black/30 hover:bg-black/50 border-white/20 text-white' 
-                      : 'bg-white/50 hover:bg-white/80 border-white/70 text-gray-700'
-                  } backdrop-blur-sm px-6`}
-                >
-                  Login
-                  <div className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-300" />
-                </Button>
-              </Link>
             </div>
           </motion.div>
         </div>
@@ -306,47 +240,6 @@ const Index = () => {
         {/* Abstract shapes */}
         <div className="absolute top-1/2 left-10 -translate-y-1/2 w-20 h-20 rounded-full bg-blue-500/20 dark:bg-blue-500/10 blur-xl animate-pulse" />
         <div className="absolute bottom-10 right-10 w-32 h-32 rounded-full bg-purple-500/20 dark:bg-purple-500/10 blur-xl animate-pulse delay-700" />
-      </section>
-
-      {/* Topics Section */}
-      <section className="py-16 px-4 sm:px-6 relative z-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${
-              darkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              Explore Topics
-            </h2>
-            <p className={`text-lg max-w-2xl mx-auto ${
-              darkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              Dive into our curated collection of subjects designed to expand your knowledge
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {topics.map((topic) => (
-              <TopicCard key={topic.id} topic={topic} />
-            ))}
-          </div>
-
-          <div className="mt-12 text-center">
-            <Link to="/topics">
-              <Button 
-                variant="outline" 
-                className={`relative group ${
-                  darkMode 
-                    ? 'bg-black/30 hover:bg-black/50 border-white/20 text-white' 
-                    : 'bg-white/50 hover:bg-white/80 border-white/70 text-gray-700'
-                } backdrop-blur-sm`}
-              >
-                View All Topics
-                <ChevronRight size={18} className="ml-1" />
-                <div className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-300" />
-              </Button>
-            </Link>
-          </div>
-        </div>
       </section>
 
       {/* Why Choose EduQuest Section */}
@@ -446,7 +339,7 @@ const Index = () => {
               Join thousands of students who have already transformed their knowledge with EduQuest.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex justify-center">
               <Link to="/topics">
                 <Button size="lg" className={`relative overflow-hidden group ${
                   darkMode 
@@ -456,22 +349,6 @@ const Index = () => {
                   <span className="mr-2">Start Your Journey</span>
                   <ChevronRight size={18} />
                   <div className="absolute inset-0 rounded-md bg-blue-400 opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-300" />
-                </Button>
-              </Link>
-              
-              <Link to="/contact">
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className={`relative group ${
-                    darkMode 
-                      ? 'bg-black/30 hover:bg-black/50 border-white/20 text-white' 
-                      : 'bg-white/50 hover:bg-white/80 border-white/70 text-gray-700'
-                  } backdrop-blur-sm px-6`}
-                >
-                  Contact Us
-                  <MessageSquare size={18} className="ml-2" />
-                  <div className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-300" />
                 </Button>
               </Link>
             </div>
