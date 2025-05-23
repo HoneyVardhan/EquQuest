@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Download, Share2, Award, Home, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getUser } from '../utils/userStorage';
 
 interface CertificateProps {
   darkMode: boolean;
@@ -20,6 +21,7 @@ const Certificate: React.FC<CertificateProps> = ({
   totalQuestions
 }) => {
   const percentage = Math.round((score / totalQuestions) * 100);
+  const user = getUser();
 
   return (
     <div className={`min-h-screen transition-all duration-500 ${
@@ -82,17 +84,55 @@ const Certificate: React.FC<CertificateProps> = ({
               <Award size={48} className="text-white" />
             </motion.div>
 
+            {/* Certificate Type */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="mb-4"
+            >
+              <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                isPremium 
+                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}>
+                {isPremium ? 'Premium Certificate' : 'Basic Certificate'}
+              </span>
+            </motion.div>
+
             {/* Title */}
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.6 }}
-              className={`text-4xl md:text-5xl font-bold mb-6 ${
+              className={`text-3xl md:text-4xl font-bold mb-4 ${
                 darkMode ? 'text-white' : 'text-gray-800'
               }`}
             >
-              Quiz Complete!
+              Certificate of Achievement
             </motion.h1>
+
+            {/* User Name */}
+            {user && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+                className="mb-6"
+              >
+                <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  This is to certify that
+                </p>
+                <h2 className={`text-3xl font-bold mt-2 mb-2 ${
+                  darkMode ? 'text-white' : 'text-gray-800'
+                }`}>
+                  {user.name}
+                </h2>
+                <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  has successfully completed the quiz
+                </p>
+              </motion.div>
+            )}
 
             {/* Score */}
             <motion.div
@@ -140,15 +180,17 @@ const Certificate: React.FC<CertificateProps> = ({
                 <span>Download Certificate</span>
               </button>
 
-              {/* Share Button */}
-              <button className={`flex items-center space-x-3 px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
-                darkMode 
-                  ? 'bg-white/10 text-white hover:bg-white/20' 
-                  : 'bg-white/60 text-gray-700 hover:bg-white/80'
-              }`}>
-                <Share2 size={20} />
-                <span>Share Achievement</span>
-              </button>
+              {/* Share Button - Only for Premium */}
+              {isPremium && (
+                <button className={`flex items-center space-x-3 px-8 py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
+                  darkMode 
+                    ? 'bg-white/10 text-white hover:bg-white/20' 
+                    : 'bg-white/60 text-gray-700 hover:bg-white/80'
+                }`}>
+                  <Share2 size={20} />
+                  <span>Share on LinkedIn</span>
+                </button>
+              )}
             </motion.div>
 
             {/* Premium Features */}
@@ -169,11 +211,14 @@ const Certificate: React.FC<CertificateProps> = ({
                   Unlock Premium Features
                 </h3>
                 <p className={`mb-4 ${darkMode ? 'text-purple-200' : 'text-purple-700'}`}>
-                  Get instant access to all questions, LinkedIn badges, and Google Cloud certifications!
+                  Get personalized certificates with your name, LinkedIn badges, and unlimited access!
                 </p>
-                <button className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-full font-semibold transition-all duration-300 transform hover:scale-105">
+                <Link 
+                  to="/premium"
+                  className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-full font-semibold transition-all duration-300 transform hover:scale-105"
+                >
                   Upgrade to Premium
-                </button>
+                </Link>
               </motion.div>
             )}
           </motion.div>

@@ -82,7 +82,8 @@ const Quiz = () => {
   };
 
   const handleNextQuestion = () => {
-    if (!isPremium && currentQuestion < questions.length - 1) {
+    // Start cooldown from question 10 for free users
+    if (!isPremium && currentQuestion === 9) {
       setCooldownActive(true);
       setTimeRemaining(3600); // 1 hour in seconds
     }
