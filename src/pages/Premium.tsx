@@ -25,7 +25,8 @@ const Premium = () => {
     },
     {
       name: 'Premium',
-      price: '$9.99/month',
+      price: '₹359',
+      originalPrice: '₹999',
       description: 'Unlock your full learning potential',
       features: [
         { name: 'Unlock all quiz levels', included: true },
@@ -64,6 +65,11 @@ const Premium = () => {
             <h1 className="text-4xl font-bold text-gray-800">Choose Your Plan</h1>
           </div>
           <p className="text-xl text-gray-600">Unlock premium features and accelerate your learning</p>
+          <div className="mt-4">
+            <Badge className="bg-red-500 text-white px-4 py-2 text-sm">
+              🔥 Limited Time Offer!
+            </Badge>
+          </div>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -92,8 +98,15 @@ const Premium = () => {
                   <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                   <CardDescription className="text-gray-600">{plan.description}</CardDescription>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold text-gray-800">{plan.price}</span>
-                    {plan.name === 'Premium' && <span className="text-gray-600 ml-1">/month</span>}
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-4xl font-bold text-gray-800">{plan.price}</span>
+                      {plan.originalPrice && (
+                        <span className="text-xl text-gray-500 line-through">{plan.originalPrice}</span>
+                      )}
+                    </div>
+                    {plan.name === 'Premium' && (
+                      <p className="text-sm text-red-600 font-medium mt-1">Limited time offer!</p>
+                    )}
                   </div>
                 </CardHeader>
                 

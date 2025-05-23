@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sun, Moon, GraduationCap, ArrowLeft, ChevronRight, Flame } from 'lucide-react';
@@ -7,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import StreakBadge from '@/components/StreakBadge';
+import UserProfile from '@/components/UserProfile';
 import { getStreakData } from '@/utils/quizStorage';
+import { isLoggedIn } from '@/utils/userStorage';
 
 // Topic card data
 const topics = [
@@ -146,6 +147,7 @@ const TopicCard = ({ topic }) => {
 const Topics = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [userLoggedIn, setUserLoggedIn] = useState(false);
   
   // Track mouse position for glow effects
   const handleMouseMove = (e) => {
@@ -155,10 +157,11 @@ const Topics = () => {
     document.documentElement.style.setProperty('--mouse-y', `${y}px`);
   };
   
-  // Load streak data
+  // Load streak data and check login status
   useEffect(() => {
     const streakData = getStreakData();
     setStreak(streakData.currentStreak);
+    setUserLoggedIn(isLoggedIn());
   }, []);
 
   return (
@@ -268,20 +271,24 @@ const Topics = () => {
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            {/* Login Button */}
-            <Link to="/auth">
-              <Button 
-                className={`relative group ${
-                  darkMode 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : 'bg-blue-500 hover:bg-blue-600'
-                }`}
-                size="sm"
-              >
-                Login
-                <div className="absolute inset-0 rounded-md bg-blue-400 opacity-0 group-hover:opacity-40 blur-md transition-opacity duration-300" />
-              </Button>
-            </Link>
+            {/* User Profile or Login Button */}
+            {userLoggedIn ? (
+              <UserProfile darkMode={darkMode} />
+            ) : (
+              <Link to="/login">
+                <Button 
+                  className={`relative group ${
+                    darkMode 
+                      ? 'bg-blue-600 hover:bg-blue-700' 
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  }`}
+                  size="sm"
+                >
+                  Login
+                  <div className="absolute inset-0 rounded-md bg-blue-400 opacity-0 group-hover:opacity-40 blur-md transition-opacity duration-300" />
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Navigation Button */}
@@ -303,20 +310,24 @@ const Topics = () => {
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            {/* Login Button */}
-            <Link to="/auth">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className={`relative group ${
-                  darkMode 
-                    ? 'bg-blue-600/80 hover:bg-blue-700 border-white/20' 
-                    : 'bg-blue-500/80 hover:bg-blue-600 border-white/40'
-                } text-white`}
-              >
-                Login
-              </Button>
-            </Link>
+            {/* User Profile or Login Button (mobile) */}
+            {userLoggedIn ? (
+              <UserProfile darkMode={darkMode} />
+            ) : (
+              <Link to="/login">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className={`relative group ${
+                    darkMode 
+                      ? 'bg-blue-600/80 hover:bg-blue-700 border-white/20' 
+                      : 'bg-blue-500/80 hover:bg-blue-600 border-white/40'
+                  } text-white`}
+                >
+                  Login
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </nav>
