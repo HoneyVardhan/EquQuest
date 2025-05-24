@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { BookOpen, Target, Trophy, Users, Star, ArrowRight, Crown, Bot, LogIn, MessageSquare } from 'lucide-react';
+import { BookOpen, Target, Trophy, Users, Star, ArrowRight, LogIn } from 'lucide-react';
 import UserProfile from '../components/UserProfile';
 import AIResponseBox from '../components/AIResponseBox';
 import ProgressDashboard from '../components/ProgressDashboard';
@@ -36,7 +37,7 @@ const Index = () => {
           setIsPremium(premiumStatus);
         } catch (error) {
           console.error('Error checking premium status:', error);
-          setIsPremium(false); // Fallback to free
+          setIsPremium(false);
         } finally {
           setPremiumLoading(false);
         }
@@ -55,7 +56,6 @@ const Index = () => {
 
   const handlePremiumUpgrade = () => {
     if (!isAuthenticated) {
-      // Redirect to login if not authenticated
       window.location.href = '/login';
       return;
     }
@@ -202,7 +202,7 @@ const Index = () => {
             className="text-center mb-16"
           >
             <h1 className="text-5xl md:text-6xl font-bold text-gray-800 mb-6 leading-tight">
-              Master Your Skills with
+              Ignite Your Curiosity with
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> EduQuest</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
@@ -210,33 +210,12 @@ const Index = () => {
               Learn, grow, and excel with our comprehensive learning platform.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex justify-center">
               <Link
                 to="/topics"
                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 Start Learning Today
-              </Link>
-              
-              {!isAuthenticated && (
-                <PremiumUpgradeButton 
-                  onClick={handlePremiumUpgrade}
-                  variant="secondary"
-                />
-              )}
-              
-              {isAuthenticated && !isPremium && !premiumLoading && (
-                <PremiumUpgradeButton 
-                  onClick={handlePremiumUpgrade}
-                  variant="primary"
-                />
-              )}
-              
-              <Link
-                to="/contact"
-                className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-full font-semibold text-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-300"
-              >
-                Ask AI Assistant
               </Link>
             </div>
           </motion.div>

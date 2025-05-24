@@ -18,7 +18,14 @@ import AIMessages from "./pages/AIMessages";
 import Leaderboard from "./pages/Leaderboard";
 import Bookmarks from "./pages/Bookmarks";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -40,7 +47,6 @@ const App = () => (
           <Route path="/ai-messages" element={<AIMessages />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/bookmarks" element={<Bookmarks />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

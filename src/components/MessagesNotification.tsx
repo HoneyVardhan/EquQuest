@@ -22,43 +22,39 @@ const MessagesNotification: React.FC<MessagesNotificationProps> = ({ darkMode = 
       return;
     }
 
-    // For now, we'll simulate unread messages since we don't have a notifications table
-    // In a real implementation, you'd query the notifications table
     const fetchUnreadCount = async () => {
       try {
-        // Placeholder logic - in reality you'd query your notifications table
-        // const { data, error } = await supabase
-        //   .from('notifications')
-        //   .select('id')
-        //   .eq('user_id', user.id)
-        //   .eq('read', false);
-        
-        // For demo purposes, let's simulate some unread messages
+        // Check for AI session messages as a simple notification system
         const hasAIMessages = localStorage.getItem('lastAISession');
-        setUnreadCount(hasAIMessages ? 1 : 0);
+        const lastNotificationCheck = localStorage.getItem(`lastNotificationCheck_${user.id}`);
+        const currentTime = Date.now();
+        
+        // If there's an AI session and we haven't checked in the last hour, show notification
+        if (hasAIMessages && (!lastNotificationCheck || (currentTime - parseInt(lastNotificationCheck)) > 3600000)) {
+          setUnreadCount(1);
+        } else {
+          setUnreadCount(0);
+        }
       } catch (error) {
-        console.error('Error fetching unread count:', error);
+        console.error('Error checking notifications:', error);
         setUnreadCount(0);
       }
     };
 
     fetchUnreadCount();
 
-    // Set up real-time subscription for notifications (when table exists)
-    // const subscription = supabase
-    //   .channel('notifications')
-    //   .on('postgres_changes', 
-    //     { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-    //     () => fetchUnreadCount()
-    //   )
-    //   .subscribe();
+    // Check every 30 seconds for new notifications
+    const interval = setInterval(fetchUnreadCount, 30000);
 
-    // return () => {
-    //   subscription.unsubscribe();
-    // };
+    return () => clearInterval(interval);
   }, [user]);
 
   const handleClick = () => {
+    if (user) {
+      // Mark as read
+      localStorage.setItem(`lastNotificationCheck_${user.id}`, Date.now().toString());
+      setUnreadCount(0);
+    }
     navigate('/ai-messages');
   };
 
@@ -75,11 +71,12 @@ const MessagesNotification: React.FC<MessagesNotificationProps> = ({ darkMode = 
             ? 'text-white hover:bg-white/10' 
             : 'text-gray-700 hover:bg-black/5'
         }`}
+        aria-label={`Messages ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
       >
         <MessageSquare className="w-5 h-5" />
         {unreadCount > 0 && (
           <Badge 
-            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[1.25rem] h-5 flex items-center justify-center"
+            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[1.25rem] h-5 flex items-center justify-center animate-pulse"
           >
             {unreadCount > 9 ? '9+' : unreadCount}
           </Badge>

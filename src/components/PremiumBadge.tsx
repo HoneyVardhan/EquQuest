@@ -15,13 +15,13 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
   const getVariantStyles = () => {
     switch (variant) {
       case 'navbar':
-        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 text-sm font-semibold animate-pulse';
+        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 text-sm font-semibold shadow-lg';
       case 'profile':
-        return 'bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 text-base font-bold';
+        return 'bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 text-base font-bold shadow-lg';
       case 'compact':
-        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 text-xs font-medium';
+        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 text-xs font-medium shadow-md';
       default:
-        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 text-sm font-semibold';
+        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 text-sm font-semibold shadow-lg';
     }
   };
 
@@ -37,7 +37,7 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
   };
 
   return (
-    <Badge className={`${getVariantStyles()} ${className} flex items-center gap-1 shadow-lg`}>
+    <Badge className={`${getVariantStyles()} ${className} flex items-center gap-1 border-0`}>
       <Crown className={getIconSize()} />
       {variant === 'compact' ? 'Pro' : 'Premium'}
     </Badge>
