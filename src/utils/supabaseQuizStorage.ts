@@ -82,10 +82,10 @@ export const getWrongAnswersFromSupabase = async (): Promise<WrongAnswer[]> => {
     return [];
   }
 
-  // Cast the Json type back to Question for our interface
+  // Cast the Json type back to Question for our interface with proper type conversion
   return (data || []).map(item => ({
     ...item,
-    question_data: item.question_data as Question
+    question_data: item.question_data as unknown as Question
   }));
 };
 
