@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { BookOpen, Target, Trophy, Users, Star, ArrowRight, Crown, Bot, LogIn } from 'lucide-react';
+import { BookOpen, Target, Trophy, Users, Star, ArrowRight, Crown, Bot, LogIn, MessageSquare } from 'lucide-react';
 import UserProfile from '../components/UserProfile';
 import AIResponseBox from '../components/AIResponseBox';
+import ProgressDashboard from '../components/ProgressDashboard';
+import PremiumPromotionTile from '../components/PremiumPromotionTile';
 import { useAuth } from '@/hooks/useAuth';
 import { getLastAISession, clearAISession } from '../utils/geminiAI';
 import { checkPremiumStatus } from '../utils/supabaseEnhanced';
@@ -113,6 +115,12 @@ const Index = () => {
             <Link to="/contact" className="text-gray-600 hover:text-gray-800 transition-colors">
               Contact
             </Link>
+            {isAuthenticated && (
+              <Link to="/ai-messages" className="flex items-center space-x-1 text-gray-600 hover:text-gray-800 transition-colors">
+                <MessageSquare size={16} />
+                <span>AI Messages</span>
+              </Link>
+            )}
             {isAuthenticated ? (
               <UserProfile />
             ) : (
@@ -168,43 +176,16 @@ const Index = () => {
                 to="/contact"
                 className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-full font-semibold text-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-300"
               >
-                Learn More
+                Ask AI Assistant
               </Link>
             </div>
           </motion.div>
 
           {/* Premium Promotion Tile */}
-          {isAuthenticated && !isPremium && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="mb-16"
-            >
-              <div className="max-w-2xl mx-auto">
-                <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-2xl p-6 border border-purple-200 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
-                        <Crown className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800">Unlock Premium Features</h3>
-                        <p className="text-gray-600">Boost your learning with AI assistance, certificates, and more!</p>
-                      </div>
-                    </div>
-                    <Link
-                      to="/unlock-premium"
-                      className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-300"
-                    >
-                      <span>Unlock Premium</span>
-                      <ArrowRight size={16} />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
+          <PremiumPromotionTile />
+
+          {/* Progress Dashboard for authenticated users */}
+          {isAuthenticated && <ProgressDashboard />}
 
           {/* Features Grid */}
           <motion.div

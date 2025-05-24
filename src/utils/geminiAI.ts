@@ -15,6 +15,13 @@ export interface AIQASession {
   timestamp: string;
 }
 
+export interface AIMessage {
+  id: string;
+  question: string;
+  response: string;
+  timestamp: string;
+}
+
 const GEMINI_API_KEY = 'AIzaSyAHiQs5phbNmN7sjtlb3BOw7X8rrFoPdIw';
 
 export const callGeminiAPI = async (question: string): Promise<string> => {
@@ -52,6 +59,27 @@ export const saveAISession = (question: string, response: string): void => {
     timestamp: new Date().toISOString()
   };
   localStorage.setItem('lastAISession', JSON.stringify(session));
+  
+  // Also save to message history
+  saveAIMessage(question, response);
+};
+
+export const saveAIMessage = (question: string, response: string): void => {
+  const message: AIMessage = {
+    id: Date.now().toString(),
+    question,
+    response,
+    timestamp: new Date().toISOString()
+  };
+  
+  const existing = getAIMessageHistory();
+  const updated = [message, ...existing].slice(0, 50); // Keep last 50 messages
+  localStorage.setItem('aiMessageHistory', JSON.stringify(updated));
+};
+
+export const getAIMessageHistory = (): AIMessage[] => {
+  const saved = localStorage.getItem('aiMessageHistory');
+  return saved ? JSON.parse(saved) : [];
 };
 
 export const getLastAISession = (): AIQASession | null => {
@@ -61,4 +89,8 @@ export const getLastAISession = (): AIQASession | null => {
 
 export const clearAISession = (): void => {
   localStorage.removeItem('lastAISession');
+};
+
+export const clearAIMessageHistory = (): void => {
+  localStorage.removeItem('aiMessageHistory');
 };
