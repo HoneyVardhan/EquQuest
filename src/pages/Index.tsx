@@ -1,38 +1,136 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, BookOpen, Users, Award, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import AIResponseBox from '@/components/AIResponseBox';
-import { getLastAISession, clearAISession } from '@/utils/geminiAI';
+import { BookOpen, Target, Trophy, Users, Star, ArrowRight, Crown, Bot, LogIn } from 'lucide-react';
+import UserProfile from '../components/UserProfile';
+import AIResponseBox from '../components/AIResponseBox';
+import { useAuth } from '@/hooks/useAuth';
+import { getLastAISession, clearAISession } from '../utils/geminiAI';
+import { checkPremiumStatus } from '../utils/supabaseEnhanced';
+import type { AIQASession } from '../utils/geminiAI';
 
 const Index = () => {
-  const [showAIResponse, setShowAIResponse] = useState(false);
-  const [aiSession, setAiSession] = useState<{question: string, response: string} | null>(null);
+  const { isAuthenticated, loading } = useAuth();
+  const [aiSession, setAiSession] = useState<AIQASession | null>(null);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
-    // Check for saved AI session when component mounts
+    // Load AI session from localStorage
     const lastSession = getLastAISession();
-    if (lastSession) {
-      setAiSession({
-        question: lastSession.question,
-        response: lastSession.response
-      });
-      setShowAIResponse(true);
-    }
-  }, []);
+    setAiSession(lastSession);
+
+    // Check premium status if authenticated
+    const checkStatus = async () => {
+      if (isAuthenticated) {
+        const premiumStatus = await checkPremiumStatus();
+        setIsPremium(premiumStatus);
+      }
+    };
+    checkStatus();
+  }, [isAuthenticated]);
 
   const handleCloseAIResponse = () => {
-    setShowAIResponse(false);
     setAiSession(null);
     clearAISession();
   };
 
+  const features = [
+    {
+      icon: BookOpen,
+      title: "Interactive Quizzes",
+      description: "Test your knowledge with engaging, topic-based quizzes designed to enhance learning.",
+      color: "from-blue-500 to-blue-600"
+    },
+    {
+      icon: Target,
+      title: "Skill Assessment",
+      description: "Track your progress and identify areas for improvement with detailed analytics.",
+      color: "from-green-500 to-green-600"
+    },
+    {
+      icon: Trophy,
+      title: "Achievement System",
+      description: "Earn badges and certificates as you complete challenges and reach milestones.",
+      color: "from-yellow-500 to-yellow-600"
+    },
+    {
+      icon: Users,
+      title: "Community Learning",
+      description: "Connect with fellow learners and share your educational journey.",
+      color: "from-purple-500 to-purple-600"
+    }
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Student",
+      content: "EduQuest has transformed my learning experience. The interactive quizzes are engaging and help me retain information better.",
+      rating: 5
+    },
+    {
+      name: "Michael Chen",
+      role: "Professional",
+      content: "The skill assessments helped me identify my knowledge gaps and improve my expertise in data science.",
+      rating: 5
+    },
+    {
+      name: "Emily Rodriguez",
+      role: "Educator",
+      content: "I recommend EduQuest to all my students. It's an excellent platform for self-paced learning and assessment.",
+      rating: 5
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <header className="relative z-20 p-6">
+        <div className="flex justify-between items-center max-w-6xl mx-auto">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <BookOpen className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold text-gray-800">EduQuest</span>
+          </div>
+          
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link to="/topics" className="text-gray-600 hover:text-gray-800 transition-colors">
+              Topics
+            </Link>
+            <Link to="/contact" className="text-gray-600 hover:text-gray-800 transition-colors">
+              Contact
+            </Link>
+            {isAuthenticated ? (
+              <UserProfile />
+            ) : (
+              <Link
+                to="/login"
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+              >
+                <LogIn size={16} />
+                <span>Sign In</span>
+              </Link>
+            )}
+          </nav>
+        </div>
+      </header>
+
       {/* AI Response Box */}
       <AnimatePresence>
-        {showAIResponse && aiSession && (
+        {aiSession && (
           <AIResponseBox
             question={aiSession.question}
             response={aiSession.response}
@@ -41,214 +139,160 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/40 border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-8">
-              <Link to="/" className="text-2xl font-bold text-gray-800">
-                EduQuest
-              </Link>
-              <div className="hidden md:flex space-x-6">
-                <Link to="/" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Home
-                </Link>
-                <Link to="/topics" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Topics
-                </Link>
-                <Link to="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Contact
-                </Link>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link 
-                to="/premium"
-                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-full font-semibold transition-all duration-300 transform hover:scale-105"
-              >
-                <Crown className="w-4 h-4" />
-                <span>Upgrade Premium</span>
-              </Link>
-              <Link 
-                to="/login"
-                className="px-6 py-2 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white rounded-full font-semibold transition-all duration-300"
-              >
-                Login
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
+      <main className="relative z-10">
+        <div className="max-w-6xl mx-auto px-6 py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
+            className="text-center mb-16"
           >
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-800 mb-6">
-              Welcome to <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">EduQuest</span>
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-800 mb-6 leading-tight">
+              Master Your Skills with
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> EduQuest</span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Learn smarter, challenge yourself, earn certificates.
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              Embark on an educational journey with interactive quizzes, personalized assessments, and achievement tracking. 
+              Learn, grow, and excel with our comprehensive learning platform.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Link 
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link
                 to="/topics"
-                className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
-                <span>Start Your Journey</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                Start Learning Today
+              </Link>
+              <Link
+                to="/contact"
+                className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-full font-semibold text-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-300"
+              >
+                Learn More
               </Link>
             </div>
           </motion.div>
 
-          {/* Floating Elements */}
+          {/* Premium Promotion Tile */}
+          {isAuthenticated && !isPremium && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="mb-16"
+            >
+              <div className="max-w-2xl mx-auto">
+                <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-2xl p-6 border border-purple-200 shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+                        <Crown className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800">Unlock Premium Features</h3>
+                        <p className="text-gray-600">Boost your learning with AI assistance, certificates, and more!</p>
+                      </div>
+                    </div>
+                    <Link
+                      to="/unlock-premium"
+                      className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-300"
+                    >
+                      <span>Unlock Premium</span>
+                      <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Features Grid */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 1 }}
-            className="mt-20"
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20"
           >
-            <div className="relative">
+            {features.map((feature, index) => (
               <motion.div
-                animate={{ 
-                  y: [0, -20, 0],
-                  rotate: [0, 5, 0]
-                }}
-                transition={{ 
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="absolute -top-10 left-1/4 backdrop-blur-md bg-white/30 p-4 rounded-2xl shadow-lg"
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 + index * 0.1 }}
+                className="backdrop-blur-md bg-white/60 rounded-2xl p-6 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
               >
-                <BookOpen className="w-8 h-8 text-blue-600" />
+                <div className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-lg flex items-center justify-center mb-4`}>
+                  <feature.icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
               </motion.div>
-              
-              <motion.div
-                animate={{ 
-                  y: [0, 20, 0],
-                  rotate: [0, -5, 0]
-                }}
-                transition={{ 
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="absolute -top-5 right-1/4 backdrop-blur-md bg-white/30 p-4 rounded-2xl shadow-lg"
-              >
-                <Award className="w-8 h-8 text-purple-600" />
-              </motion.div>
-            </div>
+            ))}
           </motion.div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
+          {/* Testimonials */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="mb-20"
           >
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">
-              Why Choose EduQuest?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Our platform offers an engaging learning experience with interactive quizzes and comprehensive skill development.
-            </p>
+            <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">What Our Learners Say</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map((testimonial, index) => (
+                <div
+                  key={index}
+                  className="backdrop-blur-md bg-white/60 rounded-2xl p-6 border border-white/20 shadow-lg"
+                >
+                  <div className="flex items-center mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 mb-4 italic">"{testimonial.content}"</p>
+                  <div>
+                    <p className="font-semibold text-gray-800">{testimonial.name}</p>
+                    <p className="text-gray-600 text-sm">{testimonial.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              viewport={{ once: true }}
-              className="backdrop-blur-md bg-white/40 p-8 rounded-3xl shadow-lg border border-white/20 text-center hover:shadow-xl transition-all duration-300"
-            >
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <BookOpen className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-4">Interactive Learning</h3>
-              <p className="text-gray-600">
-                Engage with carefully crafted quizzes designed to test and improve your knowledge across various subjects.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="backdrop-blur-md bg-white/40 p-8 rounded-3xl shadow-lg border border-white/20 text-center hover:shadow-xl transition-all duration-300"
-            >
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Users className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-4">Expert Content</h3>
-              <p className="text-gray-600">
-                Learn from industry experts with content that's practical, up-to-date, and relevant to your career goals.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              viewport={{ once: true }}
-              className="backdrop-blur-md bg-white/40 p-8 rounded-3xl shadow-lg border border-white/20 text-center hover:shadow-xl transition-all duration-300"
-            >
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Award className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-4">Earn Certificates</h3>
-              <p className="text-gray-600">
-                Showcase your achievements with personalized certificates that validate your skills and knowledge.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+          {/* CTA Section */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="backdrop-blur-md bg-gradient-to-r from-blue-50/50 to-purple-50/50 p-12 rounded-3xl shadow-xl border border-white/20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="text-center backdrop-blur-md bg-white/60 rounded-3xl p-12 border border-white/20 shadow-lg"
           >
-            <h2 className="text-4xl font-bold text-gray-800 mb-6">
-              Ready to Start Learning?
-            </h2>
-            <p className="text-xl text-gray-600 mb-8">
-              Join thousands of learners who are advancing their careers with EduQuest.
+            <h2 className="text-4xl font-bold text-gray-800 mb-6">Ready to Start Your Learning Journey?</h2>
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Join thousands of learners who are already advancing their skills with EduQuest's interactive platform.
             </p>
-            <Link 
+            <Link
               to="/topics"
-              className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
               <span>Explore Topics</span>
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight size={20} />
             </Link>
           </motion.div>
         </div>
-      </section>
+      </main>
 
       {/* Footer */}
-      <footer className="py-12 px-6 text-center text-gray-600">
-        <div className="max-w-7xl mx-auto">
-          <p>© 2025 EduQuest. Contact us at welcome@eduquest.com</p>
+      <footer className="relative z-10 py-12 text-center text-gray-600 border-t border-white/20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-3 mb-4 md:mb-0">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-800">EduQuest</span>
+            </div>
+            <p>© 2025 EduQuest. Contact us at welcome@eduquest.com</p>
+          </div>
         </div>
       </footer>
     </div>

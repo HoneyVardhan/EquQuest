@@ -11,6 +11,9 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Premium from "./pages/Premium";
 import NotFound from "./pages/NotFound";
+import VerifyEmail from "./pages/VerifyEmail";
+import UnlockPremium from "./pages/UnlockPremium";
+import PublicProfile from "./pages/PublicProfile";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +31,9 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/premium" element={<Premium />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/unlock-premium" element={<UnlockPremium />} />
+          <Route path="/profile/:username" element={<PublicProfile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

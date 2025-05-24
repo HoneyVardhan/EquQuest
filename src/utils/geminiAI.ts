@@ -15,8 +15,10 @@ export interface AIQASession {
   timestamp: string;
 }
 
-export const callGeminiAPI = async (question: string, apiKey: string): Promise<string> => {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+const GEMINI_API_KEY = 'AIzaSyAHiQs5phbNmN7sjtlb3BOw7X8rrFoPdIw';
+
+export const callGeminiAPI = async (question: string): Promise<string> => {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

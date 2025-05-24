@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Crown } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import QuestionCard from '../components/QuestionCard';
 import ProgressBar from '../components/ProgressBar';
@@ -18,6 +18,15 @@ import {
   removeWrongAnswerFromSupabase, 
   getUserStreak
 } from '../utils/supabaseQuizStorage';
+import {
+  startQuizSession,
+  endQuizSession,
+  saveQuizResult,
+  awardCertificate,
+  checkPremiumStatus,
+  checkEmailVerification,
+  getUserProfile
+} from '../utils/supabaseEnhanced';
 import { toast } from "sonner";
 
 interface QuizParams {
@@ -34,12 +43,13 @@ const Quiz = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<(number | null)[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isQuizComplete, setIsQuizComplete] = useState(false);
-  const [isPremium] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   const [cooldownActive, setCooldownActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [streak, setStreak] = useState(0);
   const [specialQuestion, setSpecialQuestion] = useState(null);
   const [showSpecialQuestion, setShowSpecialQuestion] = useState(false);
+  const [quizSessionId, setQuizSessionId] = useState<string | null>(null);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -47,6 +57,36 @@ const Quiz = () => {
       navigate('/login');
     }
   }, [isAuthenticated, loading, navigate]);
+
+  // Check premium status and email verification
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      if (!isAuthenticated) return;
+
+      const [premiumStatus, emailVerified] = await Promise.all([
+        checkPremiumStatus(),
+        checkEmailVerification()
+      ]);
+
+      setIsPremium(premiumStatus);
+
+      // Check if user needs email verification for premium features
+      if (!emailVerified && premiumStatus) {
+        toast.error('Please verify your email to access premium features.');
+        navigate('/verify-email');
+        return;
+      }
+
+      // Check if non-premium user is trying to access premium content
+      if (!premiumStatus && topicId && topicId.includes('advanced')) {
+        toast.error('This content requires a premium subscription.');
+        navigate('/unlock-premium');
+        return;
+      }
+    };
+
+    checkUserStatus();
+  }, [isAuthenticated, topicId, navigate]);
 
   // Get topic and questions based on topicId
   const topic = allTopics.find(t => t.id === topicId) || allTopics[0];
@@ -56,18 +96,22 @@ const Quiz = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    if (selectedAnswers.length === 0) {
-      setSelectedAnswers(new Array(questions.length).fill(null));
-    }
-    
-    // Load streak data from Supabase
-    const loadStreak = async () => {
+    const initializeQuiz = async () => {
+      if (selectedAnswers.length === 0) {
+        setSelectedAnswers(new Array(questions.length).fill(null));
+      }
+      
+      // Start quiz session
+      if (!quizSessionId) {
+        const sessionId = await startQuizSession(topic.id);
+        setQuizSessionId(sessionId);
+      }
+      
+      // Load streak data from Supabase
       const userStreak = await getUserStreak();
       setStreak(userStreak);
-    };
-    
-    // Check for special question of the day
-    const loadSpecialQuestion = async () => {
+      
+      // Check for special question of the day
       const todaysSpecialQuestion = await getSpecialQuestionFromSupabase();
       if (todaysSpecialQuestion) {
         setSpecialQuestion(todaysSpecialQuestion);
@@ -77,9 +121,8 @@ const Quiz = () => {
       }
     };
 
-    loadStreak();
-    loadSpecialQuestion();
-  }, [questions.length, selectedAnswers.length, isAuthenticated]);
+    initializeQuiz();
+  }, [questions.length, selectedAnswers.length, isAuthenticated, topic.id, quizSessionId]);
 
   const handleAnswerSelect = async (answerIndex: number) => {
     if (selectedAnswers[currentQuestion] !== null) return;
@@ -109,12 +152,41 @@ const Quiz = () => {
       setCurrentQuestion(currentQuestion + 1);
       setShowExplanation(false);
     } else {
-      // Save quiz attempt and update streak
+      // Quiz completion logic
       const score = selectedAnswers.filter((answer, index) => answer === questions[index].correctAnswer).length;
-      await saveQuizAttempt(topic.id, score, questions.length);
       
-      const updatedStreak = await getUserStreak();
-      setStreak(updatedStreak);
+      try {
+        // End quiz session
+        if (quizSessionId) {
+          await endQuizSession(quizSessionId, score);
+        }
+        
+        // Save quiz attempt and result
+        await Promise.all([
+          saveQuizAttempt(topic.id, score, questions.length),
+          saveQuizResult(topic.id, score, questions.length)
+        ]);
+        
+        // Award certificate if score >= 80%
+        const percentage = (score / questions.length) * 100;
+        if (percentage >= 80) {
+          const certificateAwarded = await awardCertificate(topic.id, score, questions.length);
+          if (certificateAwarded) {
+            toast.success('Congratulations! You earned a certificate!', {
+              duration: 5000
+            });
+          }
+        }
+        
+        // Update streak
+        const updatedStreak = await getUserStreak();
+        setStreak(updatedStreak);
+        
+        toast.success('Quiz completed successfully!');
+      } catch (error) {
+        console.error('Error saving quiz results:', error);
+        toast.error('Error saving quiz results. Please try again.');
+      }
       
       setIsQuizComplete(true);
     }
@@ -200,6 +272,16 @@ const Quiz = () => {
             
             {/* Streak badge */}
             <StreakBadge streak={streak} darkMode={darkMode} />
+            
+            {/* Premium badge */}
+            {isPremium && (
+              <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${
+                darkMode ? 'bg-purple-900/30 text-purple-300' : 'bg-purple-100 text-purple-700'
+              }`}>
+                <Crown size={16} />
+                <span className="text-sm font-medium">Premium</span>
+              </div>
+            )}
           </div>
 
           <button

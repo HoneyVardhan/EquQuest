@@ -16,9 +16,7 @@ const Contact = () => {
     message: ''
   });
   const [aiQuestion, setAiQuestion] = useState('');
-  const [aiResponse, setAiResponse] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [apiKey, setApiKey] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,11 +25,6 @@ const Contact = () => {
   };
 
   const handleAiQuestion = async () => {
-    if (!apiKey) {
-      toast.error('Please enter your Gemini API key first');
-      return;
-    }
-
     if (!aiQuestion.trim()) {
       toast.error('Please enter a question');
       return;
@@ -39,18 +32,19 @@ const Contact = () => {
 
     setIsAiLoading(true);
     try {
-      const response = await callGeminiAPI(aiQuestion, apiKey);
-      setAiResponse(response);
+      const response = await callGeminiAPI(aiQuestion);
       
       // Save to localStorage for cross-page persistence
       saveAISession(aiQuestion, response);
       
-      toast.success('AI response received!');
+      toast.success('AI response received! Redirecting to view response...');
       
       // Navigate to home page to show the response
-      navigate('/');
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
     } catch (error) {
-      toast.error('Failed to get AI response. Please check your API key.');
+      toast.error('Failed to get AI response. Please try again.');
       console.error('AI Error:', error);
     } finally {
       setIsAiLoading(false);
@@ -169,26 +163,10 @@ const Contact = () => {
               <CardContent className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Gemini API Key
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Enter your Gemini API key"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Get your API key from Google AI Studio
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Your Question
                   </label>
                   <textarea
-                    rows={3}
+                    rows={4}
                     placeholder="Ask anything about EduQuest or educational topics..."
                     value={aiQuestion}
                     onChange={(e) => setAiQuestion(e.target.value)}
@@ -204,13 +182,6 @@ const Contact = () => {
                   <MessageCircle className="w-4 h-4 mr-2" />
                   {isAiLoading ? 'Getting Answer...' : 'Ask AI'}
                 </Button>
-
-                {aiResponse && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-md">
-                    <h4 className="font-medium text-gray-800 mb-2">AI Response:</h4>
-                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{aiResponse}</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </motion.div>
