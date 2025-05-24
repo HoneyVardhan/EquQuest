@@ -338,6 +338,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_rank: {
+        Args: { target_user_id: string }
+        Returns: number
+      }
       get_user_streak: {
         Args: { user_uuid: string }
         Returns: number

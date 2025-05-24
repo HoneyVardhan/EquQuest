@@ -355,31 +355,54 @@ export const getLifelineUsage = async (questionId: number): Promise<LifelineUsag
     return [];
   }
 
-  return data || [];
+  return (data || []).map(item => ({
+    ...item,
+    lifeline_type: item.lifeline_type as 'hint' | 'skip'
+  }));
 };
 
 // Leaderboard Management
 export const getLeaderboard = async (limit: number = 50, offset: number = 0): Promise<LeaderboardEntry[]> => {
-  const { data, error } = await supabase
+  // First get leaderboard stats
+  const { data: leaderboardData, error: leaderboardError } = await supabase
     .from('leaderboard_stats')
-    .select(`
-      *,
-      profiles!inner(full_name, username, avatar_url)
-    `)
+    .select('*')
     .order('total_score', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  if (error) {
-    console.error('Error fetching leaderboard:', error);
+  if (leaderboardError) {
+    console.error('Error fetching leaderboard:', leaderboardError);
     return [];
   }
 
-  return (data || []).map(entry => ({
-    ...entry,
-    full_name: entry.profiles?.full_name,
-    username: entry.profiles?.username,
-    avatar_url: entry.profiles?.avatar_url
-  }));
+  if (!leaderboardData || leaderboardData.length === 0) {
+    return [];
+  }
+
+  // Get user IDs to fetch profile data
+  const userIds = leaderboardData.map(entry => entry.user_id);
+
+  // Get profile data for these users
+  const { data: profilesData, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, full_name, username, avatar_url')
+    .in('id', userIds);
+
+  if (profilesError) {
+    console.error('Error fetching profiles:', profilesError);
+    return leaderboardData;
+  }
+
+  // Merge the data
+  return leaderboardData.map(entry => {
+    const profile = profilesData?.find(p => p.id === entry.user_id);
+    return {
+      ...entry,
+      full_name: profile?.full_name,
+      username: profile?.username,
+      avatar_url: profile?.avatar_url
+    };
+  });
 };
 
 export const getUserRank = async (): Promise<number | null> => {
