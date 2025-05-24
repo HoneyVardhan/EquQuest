@@ -140,6 +140,22 @@ export const awardCertificate = async (
   return true;
 };
 
+// Streak Management
+export const getUserStreak = async (userId?: string): Promise<number> => {
+  const targetUserId = userId || (await supabase.auth.getUser()).data.user?.id;
+  if (!targetUserId) return 0;
+
+  const { data, error } = await supabase
+    .rpc('get_user_streak', { user_uuid: targetUserId });
+
+  if (error) {
+    console.error('Error fetching user streak:', error);
+    return 0;
+  }
+
+  return data || 0;
+};
+
 // User Profile Management
 export const getUserProfile = async (): Promise<UserProfile | null> => {
   const { data: { user } } = await supabase.auth.getUser();
