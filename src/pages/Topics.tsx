@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, GraduationCap, ArrowLeft, ChevronRight, Flame } from 'lucide-react';
+import { Sun, Moon, GraduationCap, ArrowLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import StreakBadge from '@/components/StreakBadge';
 import UserProfile from '@/components/UserProfile';
-import { getStreakData } from '@/utils/quizStorage';
-import { isLoggedIn } from '@/utils/userStorage';
+import AuthModal from '@/components/AuthModal';
+import { useAuth } from '@/hooks/useAuth';
+import { getUserStreak } from '@/utils/supabaseQuizStorage';
 
 // Topic card data
 const topics = [
@@ -147,7 +148,8 @@ const TopicCard = ({ topic }) => {
 const Topics = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [streak, setStreak] = useState(0);
-  const [userLoggedIn, setUserLoggedIn] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { isAuthenticated, loading } = useAuth();
   
   // Track mouse position for glow effects
   const handleMouseMove = (e) => {
@@ -157,12 +159,21 @@ const Topics = () => {
     document.documentElement.style.setProperty('--mouse-y', `${y}px`);
   };
   
-  // Load streak data and check login status
+  // Load streak data
   useEffect(() => {
-    const streakData = getStreakData();
-    setStreak(streakData.currentStreak);
-    setUserLoggedIn(isLoggedIn());
-  }, []);
+    const loadStreak = async () => {
+      if (isAuthenticated) {
+        const userStreak = await getUserStreak();
+        setStreak(userStreak);
+      }
+    };
+    
+    loadStreak();
+  }, [isAuthenticated]);
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+  };
 
   return (
     <div 
@@ -255,7 +266,7 @@ const Topics = () => {
             </NavigationMenu>
             
             {/* Streak Display */}
-            {streak > 0 && (
+            {streak > 0 && isAuthenticated && (
               <StreakBadge streak={streak} darkMode={darkMode} />
             )}
             
@@ -272,29 +283,28 @@ const Topics = () => {
             </button>
 
             {/* User Profile or Login Button */}
-            {userLoggedIn ? (
+            {isAuthenticated ? (
               <UserProfile darkMode={darkMode} />
             ) : (
-              <Link to="/login">
-                <Button 
-                  className={`relative group ${
-                    darkMode 
-                      ? 'bg-blue-600 hover:bg-blue-700' 
-                      : 'bg-blue-500 hover:bg-blue-600'
-                  }`}
-                  size="sm"
-                >
-                  Login
-                  <div className="absolute inset-0 rounded-md bg-blue-400 opacity-0 group-hover:opacity-40 blur-md transition-opacity duration-300" />
-                </Button>
-              </Link>
+              <Button 
+                onClick={() => setShowAuthModal(true)}
+                className={`relative group ${
+                  darkMode 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-blue-500 hover:bg-blue-600'
+                }`}
+                size="sm"
+              >
+                Login
+                <div className="absolute inset-0 rounded-md bg-blue-400 opacity-0 group-hover:opacity-40 blur-md transition-opacity duration-300" />
+              </Button>
             )}
           </div>
 
           {/* Mobile Navigation Button */}
           <div className="md:hidden flex items-center space-x-3">
             {/* Streak Display (mobile) */}
-            {streak > 0 && (
+            {streak > 0 && isAuthenticated && (
               <StreakBadge streak={streak} darkMode={darkMode} />
             )}
           
@@ -311,22 +321,21 @@ const Topics = () => {
             </button>
 
             {/* User Profile or Login Button (mobile) */}
-            {userLoggedIn ? (
+            {isAuthenticated ? (
               <UserProfile darkMode={darkMode} />
             ) : (
-              <Link to="/login">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className={`relative group ${
-                    darkMode 
-                      ? 'bg-blue-600/80 hover:bg-blue-700 border-white/20' 
-                      : 'bg-blue-500/80 hover:bg-blue-600 border-white/40'
-                  } text-white`}
-                >
-                  Login
-                </Button>
-              </Link>
+              <Button 
+                onClick={() => setShowAuthModal(true)}
+                variant="outline" 
+                size="sm"
+                className={`relative group ${
+                  darkMode 
+                    ? 'bg-blue-600/80 hover:bg-blue-700 border-white/20' 
+                    : 'bg-blue-500/80 hover:bg-blue-600 border-white/40'
+                } text-white`}
+              >
+                Login
+              </Button>
             )}
           </div>
         </div>
@@ -387,6 +396,13 @@ const Topics = () => {
           </p>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+      />
     </div>
   );
 };

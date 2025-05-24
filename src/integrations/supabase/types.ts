@@ -9,13 +9,177 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      certificates: {
+        Row: {
+          id: string
+          issued_at: string
+          score: number
+          topic_id: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          issued_at: string
+          score: number
+          topic_id: string
+          total: number
+          user_id?: string
+        }
+        Update: {
+          id?: string
+          issued_at?: string
+          score?: number
+          topic_id?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      quiz_attempts: {
+        Row: {
+          completed_at: string | null
+          id: string
+          score: number
+          streak_day: string | null
+          topic_id: string
+          total_questions: number
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          score: number
+          streak_day?: string | null
+          topic_id: string
+          total_questions: number
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          score?: number
+          streak_day?: string | null
+          topic_id?: string
+          total_questions?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      quiz_results: {
+        Row: {
+          created_at: string
+          id: string
+          score: number
+          topic_id: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at: string
+          id?: string
+          score: number
+          topic_id: string
+          total: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          score?: number
+          topic_id?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          score: number
+          streak: number
+        }
+        Insert: {
+          created_at: string
+          email: string
+          id?: string
+          score: number
+          streak: number
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          score?: number
+          streak?: number
+        }
+        Relationships: []
+      }
+      wrong_answers: {
+        Row: {
+          answered_on: string | null
+          id: string
+          question_data: Json
+          question_id: number
+          topic_id: string
+          user_id: string | null
+        }
+        Insert: {
+          answered_on?: string | null
+          id?: string
+          question_data: Json
+          question_id: number
+          topic_id: string
+          user_id?: string | null
+        }
+        Update: {
+          answered_on?: string | null
+          id?: string
+          question_data?: Json
+          question_id?: number
+          topic_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_streak: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

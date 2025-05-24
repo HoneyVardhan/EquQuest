@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getUser, removeUser, type User as UserType } from '../utils/userStorage';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -17,17 +17,11 @@ interface UserProfileProps {
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ darkMode = false }) => {
-  const [user, setUser] = useState<UserType | null>(null);
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const userData = getUser();
-    setUser(userData);
-  }, []);
-
-  const handleSignOut = () => {
-    removeUser();
-    setUser(null);
+  const handleSignOut = async () => {
+    await signOut();
     toast.success('Successfully signed out');
     navigate('/');
   };
@@ -35,6 +29,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ darkMode = false }) => {
   if (!user) {
     return null;
   }
+
+  const displayName = user.user_metadata?.full_name || 
+                     user.user_metadata?.name || 
+                     user.email?.split('@')[0] || 
+                     'User';
 
   return (
     <DropdownMenu>
@@ -48,13 +47,21 @@ const UserProfile: React.FC<UserProfileProps> = ({ darkMode = false }) => {
               : 'text-gray-700 hover:bg-black/5'
           }`}
         >
-          <User className="w-4 h-4 mr-2" />
-          {user.name.split(' ')[0]}
+          {user.user_metadata?.avatar_url ? (
+            <img 
+              src={user.user_metadata.avatar_url} 
+              alt="Profile" 
+              className="w-6 h-6 rounded-full mr-2"
+            />
+          ) : (
+            <User className="w-4 h-4 mr-2" />
+          )}
+          {displayName.split(' ')[0]}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem disabled className="flex flex-col items-start">
-          <span className="font-medium">{user.name}</span>
+          <span className="font-medium">{displayName}</span>
           <span className="text-xs text-muted-foreground">{user.email}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSignOut} className="text-red-600">

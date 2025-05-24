@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Moon, Sun, Flame, Book } from 'lucide-react';
+import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import QuestionCard from '../components/QuestionCard';
 import ProgressBar from '../components/ProgressBar';
@@ -10,13 +10,14 @@ import Certificate from '../components/Certificate';
 import StreakBadge from '../components/StreakBadge';
 import SpecialQuestion from '../components/SpecialQuestion';
 import { allTopics } from '../data/questions';
+import { useAuth } from '@/hooks/useAuth';
 import { 
-  saveWrongAnswer, 
-  getSpecialQuestion, 
-  removeWrongAnswer, 
-  getStreakData,
-  updateStreak 
-} from '../utils/quizStorage';
+  saveQuizAttempt,
+  saveWrongAnswerToSupabase, 
+  getSpecialQuestionFromSupabase, 
+  removeWrongAnswerFromSupabase, 
+  getUserStreak
+} from '../utils/supabaseQuizStorage';
 import { toast } from "sonner";
 
 interface QuizParams {
@@ -26,45 +27,61 @@ interface QuizParams {
 const Quiz = () => {
   const { topicId } = useParams<keyof QuizParams>() as QuizParams;
   const navigate = useNavigate();
+  const { isAuthenticated, loading } = useAuth();
   
   const [darkMode, setDarkMode] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<(number | null)[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isQuizComplete, setIsQuizComplete] = useState(false);
-  const [isPremium] = useState(false); // Placeholder for premium logic
+  const [isPremium] = useState(false);
   const [cooldownActive, setCooldownActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [streak, setStreak] = useState(0);
   const [specialQuestion, setSpecialQuestion] = useState(null);
   const [showSpecialQuestion, setShowSpecialQuestion] = useState(false);
   
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, loading, navigate]);
+
   // Get topic and questions based on topicId
   const topic = allTopics.find(t => t.id === topicId) || allTopics[0];
   const questions = topic.questions;
 
-  // Initialize answers and streak
+  // Initialize component state
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     if (selectedAnswers.length === 0) {
       setSelectedAnswers(new Array(questions.length).fill(null));
     }
     
-    // Load streak data
-    const streakData = getStreakData();
-    setStreak(streakData.currentStreak);
+    // Load streak data from Supabase
+    const loadStreak = async () => {
+      const userStreak = await getUserStreak();
+      setStreak(userStreak);
+    };
     
     // Check for special question of the day
-    const todaysSpecialQuestion = getSpecialQuestion();
-    if (todaysSpecialQuestion) {
-      setSpecialQuestion(todaysSpecialQuestion);
-      // Show special question after a short delay
-      setTimeout(() => {
-        setShowSpecialQuestion(true);
-      }, 1000);
-    }
-  }, [questions.length, selectedAnswers.length]);
+    const loadSpecialQuestion = async () => {
+      const todaysSpecialQuestion = await getSpecialQuestionFromSupabase();
+      if (todaysSpecialQuestion) {
+        setSpecialQuestion(todaysSpecialQuestion);
+        setTimeout(() => {
+          setShowSpecialQuestion(true);
+        }, 1000);
+      }
+    };
 
-  const handleAnswerSelect = (answerIndex: number) => {
+    loadStreak();
+    loadSpecialQuestion();
+  }, [questions.length, selectedAnswers.length, isAuthenticated]);
+
+  const handleAnswerSelect = async (answerIndex: number) => {
     if (selectedAnswers[currentQuestion] !== null) return;
     
     const newAnswers = [...selectedAnswers];
@@ -72,16 +89,16 @@ const Quiz = () => {
     setSelectedAnswers(newAnswers);
     setShowExplanation(true);
     
-    // If answer is wrong, save to wrong answers
+    // If answer is wrong, save to Supabase
     if (answerIndex !== questions[currentQuestion].correctAnswer) {
-      saveWrongAnswer(questions[currentQuestion], topic.id);
+      await saveWrongAnswerToSupabase(questions[currentQuestion], topic.id);
       toast.error("Oops! That wasn't the right answer.");
     } else {
       toast.success("Great job! That's correct!");
     }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     // Start cooldown from question 10 for free users
     if (!isPremium && currentQuestion === 9) {
       setCooldownActive(true);
@@ -92,9 +109,12 @@ const Quiz = () => {
       setCurrentQuestion(currentQuestion + 1);
       setShowExplanation(false);
     } else {
-      // Update streak when quiz is completed
-      const updatedStreakData = updateStreak();
-      setStreak(updatedStreakData.currentStreak);
+      // Save quiz attempt and update streak
+      const score = selectedAnswers.filter((answer, index) => answer === questions[index].correctAnswer).length;
+      await saveQuizAttempt(topic.id, score, questions.length);
+      
+      const updatedStreak = await getUserStreak();
+      setStreak(updatedStreak);
       
       setIsQuizComplete(true);
     }
@@ -106,10 +126,9 @@ const Quiz = () => {
     }
   };
 
-  const handleSpecialQuestionAnswer = (isCorrect: boolean) => {
+  const handleSpecialQuestionAnswer = async (isCorrect: boolean) => {
     if (isCorrect && specialQuestion) {
-      // Remove from wrong answers if correctly answered
-      removeWrongAnswer(specialQuestion.question.id, specialQuestion.topicId);
+      await removeWrongAnswerFromSupabase(specialQuestion.question_data.id, specialQuestion.topic_id);
       toast.success("You mastered the question! It won't appear again.", {
         duration: 5000
       });
@@ -119,7 +138,6 @@ const Quiz = () => {
       });
     }
     
-    // Hide special question after answering
     setTimeout(() => {
       setShowSpecialQuestion(false);
       setSpecialQuestion(null);
@@ -133,6 +151,18 @@ const Quiz = () => {
   const canProceed = () => {
     return selectedAnswers[currentQuestion] !== null && (!cooldownActive || isPremium);
   };
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isQuizComplete) {
     return (
@@ -257,7 +287,7 @@ const Quiz = () => {
       {/* Special Question of the Day */}
       {showSpecialQuestion && specialQuestion && (
         <SpecialQuestion 
-          question={specialQuestion.question} 
+          question={specialQuestion.question_data} 
           onAnswerQuestion={handleSpecialQuestionAnswer}
           onDismiss={dismissSpecialQuestion}
           darkMode={darkMode}
