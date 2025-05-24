@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -7,6 +6,10 @@ import UserProfile from '../components/UserProfile';
 import AIResponseBox from '../components/AIResponseBox';
 import ProgressDashboard from '../components/ProgressDashboard';
 import PremiumPromotionTile from '../components/PremiumPromotionTile';
+import PremiumUpgradeModal from '../components/PremiumUpgradeModal';
+import PremiumBadge from '../components/PremiumBadge';
+import PremiumUpgradeButton from '../components/PremiumUpgradeButton';
+import MessagesNotification from '../components/MessagesNotification';
 import { useAuth } from '@/hooks/useAuth';
 import { getLastAISession, clearAISession } from '../utils/geminiAI';
 import { checkPremiumStatus } from '../utils/supabaseEnhanced';
@@ -16,6 +19,8 @@ const Index = () => {
   const { isAuthenticated, loading } = useAuth();
   const [aiSession, setAiSession] = useState<AIQASession | null>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumLoading, setPremiumLoading] = useState(false);
 
   useEffect(() => {
     // Load AI session from localStorage
@@ -25,8 +30,19 @@ const Index = () => {
     // Check premium status if authenticated
     const checkStatus = async () => {
       if (isAuthenticated) {
-        const premiumStatus = await checkPremiumStatus();
-        setIsPremium(premiumStatus);
+        setPremiumLoading(true);
+        try {
+          const premiumStatus = await checkPremiumStatus();
+          setIsPremium(premiumStatus);
+        } catch (error) {
+          console.error('Error checking premium status:', error);
+          setIsPremium(false); // Fallback to free
+        } finally {
+          setPremiumLoading(false);
+        }
+      } else {
+        setIsPremium(false);
+        setPremiumLoading(false);
       }
     };
     checkStatus();
@@ -35,6 +51,15 @@ const Index = () => {
   const handleCloseAIResponse = () => {
     setAiSession(null);
     clearAISession();
+  };
+
+  const handlePremiumUpgrade = () => {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      window.location.href = '/login';
+      return;
+    }
+    setShowPremiumModal(true);
   };
 
   const features = [
@@ -108,33 +133,53 @@ const Index = () => {
             <span className="text-2xl font-bold text-gray-800">EduQuest</span>
           </div>
           
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-4">
             <Link to="/topics" className="text-gray-600 hover:text-gray-800 transition-colors">
               Topics
             </Link>
             <Link to="/contact" className="text-gray-600 hover:text-gray-800 transition-colors">
               Contact
             </Link>
+            
             {isAuthenticated && (
-              <Link to="/ai-messages" className="flex items-center space-x-1 text-gray-600 hover:text-gray-800 transition-colors">
-                <MessageSquare size={16} />
-                <span>AI Messages</span>
-              </Link>
+              <>
+                <MessagesNotification />
+                {!premiumLoading && isPremium && <PremiumBadge variant="navbar" />}
+                {!premiumLoading && !isPremium && (
+                  <PremiumUpgradeButton 
+                    onClick={handlePremiumUpgrade}
+                    variant="compact"
+                  />
+                )}
+                <UserProfile />
+              </>
             )}
-            {isAuthenticated ? (
-              <UserProfile />
-            ) : (
-              <Link
-                to="/login"
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-              >
-                <LogIn size={16} />
-                <span>Sign In</span>
-              </Link>
+            
+            {!isAuthenticated && (
+              <>
+                <PremiumUpgradeButton 
+                  onClick={handlePremiumUpgrade}
+                  variant="secondary"
+                  className="mr-2"
+                />
+                <Link
+                  to="/login"
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+                >
+                  <LogIn size={16} />
+                  <span>Sign In</span>
+                </Link>
+              </>
             )}
           </nav>
         </div>
       </header>
+
+      {/* Premium Upgrade Modal */}
+      <PremiumUpgradeModal 
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+      />
 
       {/* AI Response Box */}
       <AnimatePresence>
@@ -172,6 +217,21 @@ const Index = () => {
               >
                 Start Learning Today
               </Link>
+              
+              {!isAuthenticated && (
+                <PremiumUpgradeButton 
+                  onClick={handlePremiumUpgrade}
+                  variant="secondary"
+                />
+              )}
+              
+              {isAuthenticated && !isPremium && !premiumLoading && (
+                <PremiumUpgradeButton 
+                  onClick={handlePremiumUpgrade}
+                  variant="primary"
+                />
+              )}
+              
               <Link
                 to="/contact"
                 className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-full font-semibold text-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-300"
@@ -182,7 +242,7 @@ const Index = () => {
           </motion.div>
 
           {/* Premium Promotion Tile */}
-          <PremiumPromotionTile />
+          {!isPremium && !premiumLoading && <PremiumPromotionTile />}
 
           {/* Progress Dashboard for authenticated users */}
           {isAuthenticated && <ProgressDashboard />}
@@ -251,13 +311,21 @@ const Index = () => {
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
               Join thousands of learners who are already advancing their skills with EduQuest's interactive platform.
             </p>
-            <Link
-              to="/topics"
-              className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
-              <span>Explore Topics</span>
-              <ArrowRight size={20} />
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link
+                to="/topics"
+                className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                <span>Explore Topics</span>
+                <ArrowRight size={20} />
+              </Link>
+              {!isPremium && !premiumLoading && (
+                <PremiumUpgradeButton 
+                  onClick={handlePremiumUpgrade}
+                  variant="secondary"
+                />
+              )}
+            </div>
           </motion.div>
         </div>
       </main>
