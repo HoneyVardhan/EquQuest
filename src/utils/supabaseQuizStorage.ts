@@ -57,7 +57,7 @@ export const saveWrongAnswerToSupabase = async (
       user_id: user.id,
       question_id: question.id,
       topic_id: topicId,
-      question_data: question
+      question_data: question as any // Cast to any to match Json type
     }, {
       onConflict: 'user_id,question_id,topic_id'
     });
@@ -82,7 +82,11 @@ export const getWrongAnswersFromSupabase = async (): Promise<WrongAnswer[]> => {
     return [];
   }
 
-  return data || [];
+  // Cast the Json type back to Question for our interface
+  return (data || []).map(item => ({
+    ...item,
+    question_data: item.question_data as Question
+  }));
 };
 
 export const removeWrongAnswerFromSupabase = async (
