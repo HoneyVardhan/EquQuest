@@ -1,12 +1,46 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, BookOpen, Users, Award, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import AIResponseBox from '@/components/AIResponseBox';
+import { getLastAISession, clearAISession } from '@/utils/geminiAI';
 
 const Index = () => {
+  const [showAIResponse, setShowAIResponse] = useState(false);
+  const [aiSession, setAiSession] = useState<{question: string, response: string} | null>(null);
+
+  useEffect(() => {
+    // Check for saved AI session when component mounts
+    const lastSession = getLastAISession();
+    if (lastSession) {
+      setAiSession({
+        question: lastSession.question,
+        response: lastSession.response
+      });
+      setShowAIResponse(true);
+    }
+  }, []);
+
+  const handleCloseAIResponse = () => {
+    setShowAIResponse(false);
+    setAiSession(null);
+    clearAISession();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* AI Response Box */}
+      <AnimatePresence>
+        {showAIResponse && aiSession && (
+          <AIResponseBox
+            question={aiSession.question}
+            response={aiSession.response}
+            onClose={handleCloseAIResponse}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/40 border-b border-white/20">
         <div className="max-w-7xl mx-auto px-6 py-4">

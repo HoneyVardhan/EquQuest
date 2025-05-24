@@ -5,8 +5,11 @@ import { Mail, MessageCircle, Send, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { callGeminiAPI, saveAISession } from '@/utils/geminiAI';
+import { useNavigate } from 'react-router-dom';
 
 const Contact = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,7 +22,6 @@ const Contact = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would normally send the form data to your backend
     toast.success('Message sent successfully! We will get back to you soon.');
     setFormData({ name: '', email: '', message: '' });
   };
@@ -37,27 +39,16 @@ const Contact = () => {
 
     setIsAiLoading(true);
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `You are an AI assistant for EduQuest, an educational web application. Answer this question about EduQuest or general educational topics: ${aiQuestion}`
-            }]
-          }]
-        })
-      });
-
-      const data = await response.json();
+      const response = await callGeminiAPI(aiQuestion, apiKey);
+      setAiResponse(response);
       
-      if (data.candidates && data.candidates[0]) {
-        setAiResponse(data.candidates[0].content.parts[0].text);
-      } else {
-        throw new Error('No response from AI');
-      }
+      // Save to localStorage for cross-page persistence
+      saveAISession(aiQuestion, response);
+      
+      toast.success('AI response received!');
+      
+      // Navigate to home page to show the response
+      navigate('/');
     } catch (error) {
       toast.error('Failed to get AI response. Please check your API key.');
       console.error('AI Error:', error);
