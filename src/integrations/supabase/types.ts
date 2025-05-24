@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bookmarked_questions: {
+        Row: {
+          bookmarked_at: string
+          id: string
+          question_data: Json
+          question_id: number
+          topic_id: string
+          user_id: string
+        }
+        Insert: {
+          bookmarked_at?: string
+          id?: string
+          question_data: Json
+          question_id: number
+          topic_id: string
+          user_id: string
+        }
+        Update: {
+          bookmarked_at?: string
+          id?: string
+          question_data?: Json
+          question_id?: number
+          topic_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           id: string
@@ -36,6 +63,63 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard_stats: {
+        Row: {
+          certificates_count: number | null
+          current_streak: number | null
+          last_updated: string | null
+          max_streak: number | null
+          total_quizzes: number | null
+          total_score: number | null
+          user_id: string
+        }
+        Insert: {
+          certificates_count?: number | null
+          current_streak?: number | null
+          last_updated?: string | null
+          max_streak?: number | null
+          total_quizzes?: number | null
+          total_score?: number | null
+          user_id: string
+        }
+        Update: {
+          certificates_count?: number | null
+          current_streak?: number | null
+          last_updated?: string | null
+          max_streak?: number | null
+          total_quizzes?: number | null
+          total_score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lifeline_usage: {
+        Row: {
+          id: string
+          lifeline_type: string
+          question_id: number
+          quiz_session_id: string | null
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          lifeline_type: string
+          question_id: number
+          quiz_session_id?: string | null
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          lifeline_type?: string
+          question_id?: number
+          quiz_session_id?: string | null
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -45,6 +129,9 @@ export type Database = {
           full_name: string | null
           id: string
           is_premium: boolean | null
+          notification_preferences: Json | null
+          onboarding_completed: boolean | null
+          preferred_language: string | null
           updated_at: string | null
           username: string | null
         }
@@ -56,6 +143,9 @@ export type Database = {
           full_name?: string | null
           id: string
           is_premium?: boolean | null
+          notification_preferences?: Json | null
+          onboarding_completed?: boolean | null
+          preferred_language?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -67,8 +157,41 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_premium?: boolean | null
+          notification_preferences?: Json | null
+          onboarding_completed?: boolean | null
+          preferred_language?: string | null
           updated_at?: string | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      question_reports: {
+        Row: {
+          id: string
+          message: string
+          question_id: number
+          reported_at: string
+          status: string | null
+          topic_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message: string
+          question_id: number
+          reported_at?: string
+          status?: string | null
+          topic_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message?: string
+          question_id?: number
+          reported_at?: string
+          status?: string | null
+          topic_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -218,6 +341,10 @@ export type Database = {
       get_user_streak: {
         Args: { user_uuid: string }
         Returns: number
+      }
+      update_leaderboard_stats: {
+        Args: { target_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

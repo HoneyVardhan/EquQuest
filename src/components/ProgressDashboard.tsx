@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { getUserQuizResults, getUserCertificates, getUserStreak } from '../utils/supabaseEnhanced';
+import StreakRewards from './StreakRewards';
 import type { QuizResult, Certificate } from '../utils/supabaseEnhanced';
 
 const ProgressDashboard = () => {
@@ -106,12 +107,6 @@ const ProgressDashboard = () => {
     >
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Your Progress</h2>
-        {streak > 0 && (
-          <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 rounded-full">
-            <Calendar className="w-4 h-4 text-orange-600" />
-            <span className="text-orange-700 font-medium">{streak} day streak!</span>
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -138,6 +133,18 @@ const ProgressDashboard = () => {
           </motion.div>
         ))}
       </div>
+
+      {/* Streak Rewards Component */}
+      {streak > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mb-8"
+        >
+          <StreakRewards streak={streak} />
+        </motion.div>
+      )}
 
       {totalQuizzes > 0 && (
         <Card className="backdrop-blur-md bg-white/80 border-white/20 shadow-lg">

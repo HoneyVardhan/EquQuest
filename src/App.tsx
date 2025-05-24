@@ -15,6 +15,8 @@ import VerifyEmail from "./pages/VerifyEmail";
 import UnlockPremium from "./pages/UnlockPremium";
 import PublicProfile from "./pages/PublicProfile";
 import AIMessages from "./pages/AIMessages";
+import Leaderboard from "./pages/Leaderboard";
+import Bookmarks from "./pages/Bookmarks";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const App = () => (
           <Route path="/unlock-premium" element={<UnlockPremium />} />
           <Route path="/profile/:username" element={<PublicProfile />} />
           <Route path="/ai-messages" element={<AIMessages />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/bookmarks" element={<Bookmarks />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
