@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Download, Share2, Award, Home, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getUser } from '../utils/userStorage';
+import { getWrongAnswersFromSupabase, type WrongAnswer } from '../utils/supabaseQuizStorage';
 
 interface CertificateProps {
   darkMode: boolean;
@@ -11,6 +11,7 @@ interface CertificateProps {
   isPremium: boolean;
   score: number;
   totalQuestions: number;
+  topicId?: string;
 }
 
 const Certificate: React.FC<CertificateProps> = ({
@@ -18,10 +19,39 @@ const Certificate: React.FC<CertificateProps> = ({
   setDarkMode,
   isPremium,
   score,
-  totalQuestions
+  totalQuestions,
+  topicId
 }) => {
   const percentage = Math.round((score / totalQuestions) * 100);
   const user = getUser();
+  const [wrongAnswers, setWrongAnswers] = useState<WrongAnswer[]>([]);
+  const [topicAnalysis, setTopicAnalysis] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    fetchWrongAnswersAnalysis();
+  }, []);
+
+  const fetchWrongAnswersAnalysis = async () => {
+    try {
+      const allWrongAnswers = await getWrongAnswersFromSupabase();
+      setWrongAnswers(allWrongAnswers);
+      
+      // Create topic analysis
+      const analysis: Record<string, number> = {};
+      allWrongAnswers.forEach(wa => {
+        analysis[wa.topic_id] = (analysis[wa.topic_id] || 0) + 1;
+      });
+      setTopicAnalysis(analysis);
+    } catch (error) {
+      console.error('Error fetching wrong answers analysis:', error);
+    }
+  };
+
+  const getTopWorstTopics = () => {
+    return Object.entries(topicAnalysis)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3);
+  };
 
   return (
     <div className={`min-h-screen transition-all duration-500 ${
@@ -156,7 +186,7 @@ const Certificate: React.FC<CertificateProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9, duration: 0.6 }}
-              className="mb-12"
+              className="mb-8"
             >
               <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 {percentage >= 90 
@@ -166,6 +196,55 @@ const Certificate: React.FC<CertificateProps> = ({
                     : "Good effort! Keep practicing to improve your knowledge."}
               </p>
             </motion.div>
+
+            {/* Topic Analysis */}
+            {Object.keys(topicAnalysis).length > 0 && getTopWorstTopics().length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0, duration: 0.6 }}
+                className={`mb-8 p-4 rounded-2xl ${
+                  darkMode 
+                    ? 'bg-white/5 border border-white/10' 
+                    : 'bg-white/40 border border-white/30'
+                }`}
+              >
+                <h3 className={`text-lg font-semibold mb-3 ${
+                  darkMode ? 'text-white' : 'text-gray-800'
+                }`}>
+                  Areas for Improvement
+                </h3>
+                <div className="space-y-2">
+                  {getTopWorstTopics().map(([topic, count]) => (
+                    <Link
+                      key={topic}
+                      to={`/quiz/${topic}`}
+                      className={`block p-3 rounded-lg border transition-all duration-300 hover:scale-105 ${
+                        darkMode 
+                          ? 'bg-white/5 border-white/20 hover:bg-white/10' 
+                          : 'bg-white/60 border-white/40 hover:bg-white/80'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`font-medium ${
+                          darkMode ? 'text-white' : 'text-gray-800'
+                        }`}>
+                          {topic}
+                        </span>
+                        <Badge className="bg-red-100 text-red-800">
+                          {count} wrong
+                        </Badge>
+                      </div>
+                      <p className={`text-sm mt-1 ${
+                        darkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        Click to practice this topic
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
             {/* Action Buttons */}
             <motion.div

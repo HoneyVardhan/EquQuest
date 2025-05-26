@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -15,6 +14,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { getLastAISession, clearAISession } from '../utils/geminiAI';
 import { checkPremiumStatus } from '../utils/supabaseEnhanced';
 import type { AIQASession } from '../utils/geminiAI';
+import TopicProgress from '../components/TopicProgress';
+import SmartRevision from '../components/SmartRevision';
+import { scheduleDaily9AMNotification } from '../utils/dailyNotifications';
+import { getUserStreak } from '../utils/supabaseEnhanced';
 
 const Index = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -28,13 +31,19 @@ const Index = () => {
     const lastSession = getLastAISession();
     setAiSession(lastSession);
 
-    // Check premium status if authenticated
-    const checkStatus = async () => {
+    // Check premium status and set up notifications if authenticated
+    const checkStatusAndSetupNotifications = async () => {
       if (isAuthenticated) {
         setPremiumLoading(true);
         try {
-          const premiumStatus = await checkPremiumStatus();
+          const [premiumStatus, currentStreak] = await Promise.all([
+            checkPremiumStatus(),
+            getUserStreak()
+          ]);
           setIsPremium(premiumStatus);
+          
+          // Set up daily notifications
+          await scheduleDaily9AMNotification(currentStreak);
         } catch (error) {
           console.error('Error checking premium status:', error);
           setIsPremium(false);
@@ -46,7 +55,7 @@ const Index = () => {
         setPremiumLoading(false);
       }
     };
-    checkStatus();
+    checkStatusAndSetupNotifications();
   }, [isAuthenticated]);
 
   const handleCloseAIResponse = () => {
@@ -225,6 +234,21 @@ const Index = () => {
 
           {/* Progress Dashboard for authenticated users */}
           {isAuthenticated && <ProgressDashboard />}
+
+          {/* Topic Progress */}
+          {isAuthenticated && <TopicProgress />}
+
+          {/* Smart Revision */}
+          {isAuthenticated && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="mb-8"
+            >
+              <SmartRevision />
+            </motion.div>
+          )}
 
           {/* Features Grid */}
           <motion.div

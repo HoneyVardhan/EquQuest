@@ -65,30 +65,30 @@ export type Database = {
       }
       leaderboard_stats: {
         Row: {
-          certificates_count: number | null
-          current_streak: number | null
-          last_updated: string | null
-          max_streak: number | null
-          total_quizzes: number | null
-          total_score: number | null
+          certificates_count: number
+          current_streak: number
+          last_updated: string
+          max_streak: number
+          total_quizzes: number
+          total_score: number
           user_id: string
         }
         Insert: {
-          certificates_count?: number | null
-          current_streak?: number | null
-          last_updated?: string | null
-          max_streak?: number | null
-          total_quizzes?: number | null
-          total_score?: number | null
+          certificates_count?: number
+          current_streak?: number
+          last_updated?: string
+          max_streak?: number
+          total_quizzes?: number
+          total_score?: number
           user_id: string
         }
         Update: {
-          certificates_count?: number | null
-          current_streak?: number | null
-          last_updated?: string | null
-          max_streak?: number | null
-          total_quizzes?: number | null
-          total_score?: number | null
+          certificates_count?: number
+          current_streak?: number
+          last_updated?: string
+          max_streak?: number
+          total_quizzes?: number
+          total_score?: number
           user_id?: string
         }
         Relationships: []
@@ -98,7 +98,7 @@ export type Database = {
           id: string
           lifeline_type: string
           question_id: number
-          quiz_session_id: string | null
+          quiz_session_id: string
           used_at: string
           user_id: string
         }
@@ -106,7 +106,7 @@ export type Database = {
           id?: string
           lifeline_type: string
           question_id: number
-          quiz_session_id?: string | null
+          quiz_session_id: string
           used_at?: string
           user_id: string
         }
@@ -114,7 +114,7 @@ export type Database = {
           id?: string
           lifeline_type?: string
           question_id?: number
-          quiz_session_id?: string | null
+          quiz_session_id?: string
           used_at?: string
           user_id?: string
         }
@@ -122,46 +122,46 @@ export type Database = {
       }
       profiles: {
         Row: {
-          avatar_url: string | null
-          created_at: string | null
-          email: string | null
-          email_confirmed_at: string | null
-          full_name: string | null
+          avatar_url: string
+          created_at: string
+          email: string
+          email_confirmed_at: string
+          full_name: string
           id: string
-          is_premium: boolean | null
-          notification_preferences: Json | null
-          onboarding_completed: boolean | null
-          preferred_language: string | null
-          updated_at: string | null
-          username: string | null
+          is_premium: boolean
+          notification_preferences: Json
+          onboarding_completed: boolean
+          preferred_language: string
+          updated_at: string
+          username: string
         }
         Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          email?: string | null
-          email_confirmed_at?: string | null
-          full_name?: string | null
+          avatar_url: string
+          created_at?: string
+          email: string
+          email_confirmed_at: string
+          full_name: string
           id: string
-          is_premium?: boolean | null
-          notification_preferences?: Json | null
-          onboarding_completed?: boolean | null
-          preferred_language?: string | null
-          updated_at?: string | null
-          username?: string | null
+          is_premium?: boolean
+          notification_preferences?: Json
+          onboarding_completed?: boolean
+          preferred_language?: string
+          updated_at?: string
+          username: string
         }
         Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          email?: string | null
-          email_confirmed_at?: string | null
-          full_name?: string | null
+          avatar_url?: string
+          created_at?: string
+          email?: string
+          email_confirmed_at?: string
+          full_name?: string
           id?: string
-          is_premium?: boolean | null
-          notification_preferences?: Json | null
-          onboarding_completed?: boolean | null
-          preferred_language?: string | null
-          updated_at?: string | null
-          username?: string | null
+          is_premium?: boolean
+          notification_preferences?: Json
+          onboarding_completed?: boolean
+          preferred_language?: string
+          updated_at?: string
+          username?: string
         }
         Relationships: []
       }
@@ -171,7 +171,7 @@ export type Database = {
           message: string
           question_id: number
           reported_at: string
-          status: string | null
+          status: string
           topic_id: string
           user_id: string
         }
@@ -180,7 +180,7 @@ export type Database = {
           message: string
           question_id: number
           reported_at?: string
-          status?: string | null
+          status?: string
           topic_id: string
           user_id: string
         }
@@ -189,7 +189,7 @@ export type Database = {
           message?: string
           question_id?: number
           reported_at?: string
-          status?: string | null
+          status?: string
           topic_id?: string
           user_id?: string
         }
@@ -197,30 +197,66 @@ export type Database = {
       }
       quiz_attempts: {
         Row: {
-          completed_at: string | null
+          completed_at: string
           id: string
           score: number
-          streak_day: string | null
+          streak_day: string
           topic_id: string
           total_questions: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          score: number
+          streak_day?: string
+          topic_id: string
+          total_questions: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          score?: number
+          streak_day?: string
+          topic_id?: string
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quiz_progress: {
+        Row: {
+          answers: Json | null
+          current_index: number | null
+          current_question: number | null
+          id: string
+          last_activity_date: string | null
+          last_attempted_at: string | null
+          streak: number | null
+          topic_id: string
           user_id: string | null
         }
         Insert: {
-          completed_at?: string | null
-          id?: string
-          score: number
-          streak_day?: string | null
+          answers?: Json | null
+          current_index?: number | null
+          current_question?: number | null
+          id: string
+          last_activity_date?: string | null
+          last_attempted_at?: string | null
+          streak?: number | null
           topic_id: string
-          total_questions: number
           user_id?: string | null
         }
         Update: {
-          completed_at?: string | null
+          answers?: Json | null
+          current_index?: number | null
+          current_question?: number | null
           id?: string
-          score?: number
-          streak_day?: string | null
+          last_activity_date?: string | null
+          last_attempted_at?: string | null
+          streak?: number | null
           topic_id?: string
-          total_questions?: number
           user_id?: string | null
         }
         Relationships: []
@@ -308,28 +344,28 @@ export type Database = {
       }
       wrong_answers: {
         Row: {
-          answered_on: string | null
+          answered_on: string
           id: string
           question_data: Json
           question_id: number
           topic_id: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
-          answered_on?: string | null
+          answered_on?: string
           id?: string
           question_data: Json
           question_id: number
           topic_id: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
-          answered_on?: string | null
+          answered_on?: string
           id?: string
           question_data?: Json
           question_id?: number
           topic_id?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -339,7 +375,7 @@ export type Database = {
     }
     Functions: {
       get_user_rank: {
-        Args: { target_user_id: string }
+        Args: { user_id: string }
         Returns: number
       }
       get_user_streak: {

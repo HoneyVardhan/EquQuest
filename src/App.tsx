@@ -38,6 +38,7 @@ const App = () => (
           <Route path="/topics" element={<Topics />} />
           <Route path="/quiz" element={<Quiz />} />
           <Route path="/quiz/:topicId" element={<Quiz />} />
+          <Route path="/quiz/revision" element={<Quiz />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/premium" element={<Premium />} />
