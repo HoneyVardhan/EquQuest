@@ -6,7 +6,7 @@ import { BookOpen, Trophy, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { getUserQuizResults } from '@/utils/supabaseEnhanced';
-import { topics } from '../data/questions';
+import { allTopics } from '../data/questions';
 
 interface TopicProgressData {
   topicId: string;
@@ -33,7 +33,7 @@ const TopicProgress: React.FC = () => {
     try {
       const quizResults = await getUserQuizResults();
       
-      const topicProgress = topics.map(topic => {
+      const topicProgress = allTopics.map(topic => {
         const topicResults = quizResults.filter(result => result.topic_id === topic.id);
         const scores = topicResults.map(result => (result.score / result.total) * 100);
         

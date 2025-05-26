@@ -1,7 +1,9 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Share2, Award, Home, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 import { getUser } from '../utils/userStorage';
 import { getWrongAnswersFromSupabase, type WrongAnswer } from '../utils/supabaseQuizStorage';
 
@@ -49,7 +51,7 @@ const Certificate: React.FC<CertificateProps> = ({
 
   const getTopWorstTopics = () => {
     return Object.entries(topicAnalysis)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([,a], [,b]) => Number(b) - Number(a))
       .slice(0, 3);
   };
 
