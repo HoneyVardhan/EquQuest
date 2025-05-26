@@ -68,7 +68,6 @@ export const getUserQuizResults = async (userId?: string): Promise<QuizResult[]>
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching quiz results:', error);
     return [];
   }
 };
@@ -90,7 +89,6 @@ export const saveQuizResult = async (topicId: string, score: number, total: numb
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error saving quiz result:', error);
     throw error;
   }
 };
@@ -103,7 +101,6 @@ export const updateLeaderboardStats = async (userId: string): Promise<void> => {
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error updating leaderboard stats:', error);
     throw error;
   }
 };
@@ -120,7 +117,6 @@ export const getUserStreak = async (): Promise<number> => {
     if (error) throw error;
     return data || 0;
   } catch (error) {
-    console.error('Error fetching user streak:', error);
     return 0;
   }
 };
@@ -166,7 +162,6 @@ export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
       };
     }) || [];
   } catch (error) {
-    console.error('Error fetching leaderboard:', error);
     return [];
   }
 };
@@ -182,7 +177,6 @@ export const getUserRank = async (): Promise<number> => {
     if (error) throw error;
     return data || 0;
   } catch (error) {
-    console.error('Error fetching user rank:', error);
     return 0;
   }
 };
@@ -201,7 +195,6 @@ export const checkPremiumStatus = async (): Promise<boolean> => {
     if (error) throw error;
     return data?.is_premium || false;
   } catch (error) {
-    console.error('Error checking premium status:', error);
     return false;
   }
 };
@@ -218,7 +211,6 @@ export const updatePremiumStatus = async (isPremium: boolean): Promise<void> => 
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error updating premium status:', error);
     throw error;
   }
 };
@@ -238,7 +230,6 @@ export const getUserCertificates = async (userId?: string): Promise<Certificate[
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching certificates:', error);
     return [];
   }
 };
@@ -257,7 +248,6 @@ export const getUserBookmarks = async (): Promise<BookmarkedQuestion[]> => {
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching bookmarks:', error);
     return [];
   }
 };
@@ -277,7 +267,6 @@ export const removeBookmark = async (questionId: number, topicId: string): Promi
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error removing bookmark:', error);
     return false;
   }
 };
@@ -293,7 +282,6 @@ export const getPublicProfile = async (username: string): Promise<UserProfile | 
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error fetching public profile:', error);
     return null;
   }
 };
@@ -316,7 +304,6 @@ export const startQuizSession = async (quizId: string): Promise<string> => {
     if (error) throw error;
     return data.id;
   } catch (error) {
-    console.error('Error starting quiz session:', error);
     throw error;
   }
 };
@@ -333,7 +320,6 @@ export const endQuizSession = async (sessionId: string, score: number): Promise<
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error ending quiz session:', error);
     throw error;
   }
 };
@@ -355,7 +341,6 @@ export const awardCertificate = async (topicId: string, score: number, total: nu
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error awarding certificate:', error);
     throw error;
   }
 };
@@ -365,7 +350,6 @@ export const checkEmailVerification = async (): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     return user?.email_confirmed_at !== null;
   } catch (error) {
-    console.error('Error checking email verification:', error);
     return false;
   }
 };
@@ -384,7 +368,6 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error fetching user profile:', error);
     return null;
   }
 };
@@ -402,7 +385,6 @@ export const resendEmailVerification = async (): Promise<boolean> => {
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error resending email verification:', error);
     return false;
   }
 };

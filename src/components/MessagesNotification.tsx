@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { removeWrongAnswerFromSupabase, getWrongAnswersFromSupabase, type WrongAnswer } from '@/utils/supabaseQuizStorage';
 import { getDailyQuote, hasSeenTodaysQuote, markQuoteAsSeen, type MotivationalQuote } from '@/utils/motivationalQuotes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface MessagesNotificationProps {
   darkMode?: boolean;
@@ -23,7 +23,6 @@ const MessagesNotification: React.FC<MessagesNotificationProps> = ({ darkMode = 
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) {
@@ -58,7 +57,6 @@ const MessagesNotification: React.FC<MessagesNotificationProps> = ({ darkMode = 
       
       setUnreadCount(count);
     } catch (error) {
-      console.error('Error fetching messages:', error);
       setUnreadCount(0);
     }
   };
@@ -79,17 +77,9 @@ const MessagesNotification: React.FC<MessagesNotificationProps> = ({ darkMode = 
       setWrongAnswers(prev => prev.filter(wa => wa.id !== wrongAnswer.id));
       setUnreadCount(prev => Math.max(0, prev - 1));
       
-      toast({
-        title: "Message dismissed",
-        description: "Wrong answer message has been removed from your inbox.",
-      });
+      toast.success("Message dismissed successfully");
     } catch (error) {
-      console.error('Error dismissing wrong answer:', error);
-      toast({
-        title: "Error",
-        description: "Failed to dismiss message. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to dismiss message. Please try again.");
     } finally {
       setLoading(false);
     }
