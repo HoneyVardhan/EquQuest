@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bookmark, Trash2, Play, BookOpen } from 'lucide-react';
@@ -40,16 +39,25 @@ const Bookmarks = () => {
   };
 
   const handleRemoveBookmark = async (questionId: number, topicId: string) => {
-    const success = await removeBookmark(questionId, topicId);
-    if (success) {
-      setBookmarks(prev => prev.filter(b => 
-        !(b.question_id === questionId && b.topic_id === topicId)
-      ));
-      toast({
-        title: "Success",
-        description: "Bookmark removed successfully"
-      });
-    } else {
+    try {
+      const success = await removeBookmark(questionId, topicId);
+      if (success) {
+        setBookmarks(prev => prev.filter(b => 
+          !(b.question_id === questionId && b.topic_id === topicId)
+        ));
+        toast({
+          title: "Success",
+          description: "Bookmark removed successfully"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to remove bookmark",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error removing bookmark:', error);
       toast({
         title: "Error",
         description: "Failed to remove bookmark",

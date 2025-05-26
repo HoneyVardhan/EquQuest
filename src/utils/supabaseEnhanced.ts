@@ -43,21 +43,26 @@ export interface BookmarkedQuestion {
 export interface LeaderboardEntry {
   id: string;
   full_name: string;
+  username?: string;
   avatar_url?: string;
   total_score: number;
   quiz_count: number;
+  total_quizzes: number;
+  current_streak: number;
   rank: number;
+  user_id: string;
 }
 
-export const getUserQuizResults = async (): Promise<QuizResult[]> => {
+export const getUserQuizResults = async (userId?: string): Promise<QuizResult[]> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    const targetUserId = userId || user?.id;
+    if (!targetUserId) return [];
 
     const { data, error } = await supabase
       .from('quiz_results')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', targetUserId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -129,25 +134,37 @@ export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
         total_score,
         total_quizzes,
         current_streak,
-        certificates_count,
-        profiles (
-          full_name,
-          avatar_url
-        )
+        certificates_count
       `)
       .order('total_score', { ascending: false })
-      .limit(10);
+      .limit(50);
 
     if (error) throw error;
 
-    return data?.map((item, index) => ({
-      id: item.user_id,
-      full_name: item.profiles?.full_name || 'Anonymous',
-      avatar_url: item.profiles?.avatar_url,
-      total_score: item.total_score,
-      quiz_count: item.total_quizzes,
-      rank: index + 1
-    })) || [];
+    // Get profile data separately to avoid relation issues
+    const userIds = data?.map(item => item.user_id) || [];
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, full_name, username, avatar_url')
+      .in('id', userIds);
+
+    if (profileError) throw profileError;
+
+    return data?.map((item, index) => {
+      const profile = profiles?.find(p => p.id === item.user_id);
+      return {
+        id: item.user_id,
+        user_id: item.user_id,
+        full_name: profile?.full_name || 'Anonymous',
+        username: profile?.username,
+        avatar_url: profile?.avatar_url,
+        total_score: item.total_score,
+        quiz_count: item.total_quizzes,
+        total_quizzes: item.total_quizzes,
+        current_streak: item.current_streak,
+        rank: index + 1
+      };
+    }) || [];
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     return [];
@@ -159,7 +176,9 @@ export const getUserRank = async (): Promise<number> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return 0;
 
-    const { data, error } = await supabase.rpc('get_user_rank', user.id);
+    const { data, error } = await supabase.rpc('get_user_rank', {
+      user_id: user.id
+    });
     if (error) throw error;
     return data || 0;
   } catch (error) {
@@ -243,10 +262,10 @@ export const getUserBookmarks = async (): Promise<BookmarkedQuestion[]> => {
   }
 };
 
-export const removeBookmark = async (questionId: number, topicId: string): Promise<void> => {
+export const removeBookmark = async (questionId: number, topicId: string): Promise<boolean> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return false;
 
     const { error } = await supabase
       .from('bookmarked_questions')
@@ -256,9 +275,10 @@ export const removeBookmark = async (questionId: number, topicId: string): Promi
       .eq('topic_id', topicId);
 
     if (error) throw error;
+    return true;
   } catch (error) {
     console.error('Error removing bookmark:', error);
-    throw error;
+    return false;
   }
 };
 
@@ -369,7 +389,7 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
   }
 };
 
-export const resendEmailVerification = async (): Promise<void> => {
+export const resendEmailVerification = async (): Promise<boolean> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) throw new Error('No user email found');
@@ -380,8 +400,9 @@ export const resendEmailVerification = async (): Promise<void> => {
     });
 
     if (error) throw error;
+    return true;
   } catch (error) {
     console.error('Error resending email verification:', error);
-    throw error;
+    return false;
   }
 };
