@@ -224,6 +224,43 @@ const Quiz = () => {
     return selectedAnswers[currentQuestion] !== null && (!cooldownActive || isPremium);
   };
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, loading, navigate]);
+
+  // Check premium status and email verification
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      if (!isAuthenticated) return;
+
+      const [premiumStatus, emailVerified] = await Promise.all([
+        checkPremiumStatus(),
+        checkEmailVerification()
+      ]);
+
+      setIsPremium(premiumStatus);
+
+      // Check if user needs email verification for premium features
+      if (!emailVerified && premiumStatus) {
+        toast.error('Please verify your email to access premium features.');
+        navigate('/verify-email');
+        return;
+      }
+
+      // Check if non-premium user is trying to access premium content
+      if (!premiumStatus && topicId && topicId.includes('advanced')) {
+        toast.error('This content requires a premium subscription.');
+        navigate('/unlock-premium');
+        return;
+      }
+    };
+
+    checkUserStatus();
+  }, [isAuthenticated, topicId, navigate]);
+
   // Show loading while checking authentication
   if (loading) {
     return (

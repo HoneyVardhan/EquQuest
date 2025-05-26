@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Medal, Crown, Star, TrendingUp } from 'lucide-react';
@@ -21,7 +20,7 @@ const Leaderboard = () => {
   const loadLeaderboard = async () => {
     try {
       const [leaderboardData, rankData] = await Promise.all([
-        getLeaderboard(50),
+        getLeaderboard(),
         isAuthenticated ? getUserRank() : Promise.resolve(null)
       ]);
       
