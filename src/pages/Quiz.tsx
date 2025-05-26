@@ -170,11 +170,13 @@ const Quiz = () => {
         // Award certificate if score >= 80%
         const percentage = (score / questions.length) * 100;
         if (percentage >= 80) {
-          const certificateAwarded = await awardCertificate(topic.id, score, questions.length);
-          if (certificateAwarded) {
+          try {
+            await awardCertificate(topic.id, score, questions.length);
             toast.success('Congratulations! You earned a certificate!', {
               duration: 5000
             });
+          } catch (error) {
+            console.error('Error awarding certificate:', error);
           }
         }
         
