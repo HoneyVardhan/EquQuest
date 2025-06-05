@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, Target, Trophy, Users, Star, ArrowRight, LogIn } from 'lucide-react';
 import UserProfile from '../components/UserProfile';
 import AIResponseBox from '../components/AIResponseBox';
@@ -21,6 +21,7 @@ import { getUserStreak } from '../utils/supabaseEnhanced';
 
 const Index = () => {
   const { isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
   const [aiSession, setAiSession] = useState<AIQASession | null>(null);
   const [isPremium, setIsPremium] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -65,7 +66,7 @@ const Index = () => {
 
   const handlePremiumUpgrade = () => {
     if (!isAuthenticated) {
-      window.location.href = '/login';
+      navigate('/login', { state: { from: '/unlock-premium' } });
       return;
     }
     setShowPremiumModal(true);

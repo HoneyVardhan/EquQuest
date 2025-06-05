@@ -1,24 +1,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(true);
 
+  // Get the intended destination from state or default to topics
+  const from = location.state?.from || '/topics';
+
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/topics');
+      // Redirect to the intended destination after login
+      navigate(from);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    navigate('/topics');
+    // Redirect to the intended destination
+    navigate(from);
   };
 
   const handleClose = () => {

@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { Crown, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PremiumUpgradeButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'compact';
   className?: string;
 }
@@ -14,6 +16,23 @@ const PremiumUpgradeButton: React.FC<PremiumUpgradeButtonProps> = ({
   variant = 'primary',
   className = ''
 }) => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+      return;
+    }
+
+    if (!isAuthenticated) {
+      // Pass the intended destination when redirecting to login
+      navigate('/login', { state: { from: '/unlock-premium' } });
+    } else {
+      navigate('/unlock-premium');
+    }
+  };
+
   const getVariantStyles = () => {
     switch (variant) {
       case 'secondary':
@@ -31,7 +50,7 @@ const PremiumUpgradeButton: React.FC<PremiumUpgradeButtonProps> = ({
 
   return (
     <Button
-      onClick={onClick}
+      onClick={handleClick}
       className={`${getVariantStyles()} ${className} font-semibold relative overflow-hidden group`}
       size={variant === 'compact' ? 'sm' : 'default'}
     >
