@@ -142,10 +142,10 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
 
   const handleNextQuestion = async () => {
     try {
-      // Start cooldown from question 10 for free users
-      if (!isPremium && currentQuestion === 9) {
+      // Start cooldown from question 11 for free users (2 minutes instead of 1 hour)
+      if (!isPremium && currentQuestion === 10) {
         setCooldownActive(true);
-        setTimeRemaining(3600); // 1 hour in seconds
+        setTimeRemaining(120); // 2 minutes in seconds
       }
       
       if (currentQuestion < questions.length - 1) {
