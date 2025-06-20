@@ -18,6 +18,7 @@ import TopicProgress from '../components/TopicProgress';
 import SmartRevision from '../components/SmartRevision';
 import { scheduleDaily9AMNotification } from '../utils/dailyNotifications';
 import { getUserStreak } from '../utils/supabaseEnhanced';
+import { getUser } from '../utils/userStorage';
 
 const Index = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -27,6 +28,7 @@ const Index = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [showCertificatePreview, setShowCertificatePreview] = useState(false);
+  const user = getUser();
 
   useEffect(() => {
     // Load AI session from localStorage
@@ -212,43 +214,85 @@ const Index = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl"
+              className="bg-white rounded-3xl p-8 max-w-4xl w-full shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Sample Certificate */}
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center">
-                  <Award size={32} className="text-white" />
+              {/* Certificate Template */}
+              <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-2xl overflow-hidden">
+                {/* Gold border design */}
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-yellow-300 to-yellow-500 rounded-2xl">
+                  <div className="absolute inset-4 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-xl">
+                    {/* Main certificate content */}
+                    <div className="absolute inset-8 bg-gradient-to-br from-gray-50 to-white rounded-lg flex flex-col items-center justify-center text-center p-8">
+                      
+                      {/* Gold medal with star */}
+                      <div className="absolute left-8 top-1/2 transform -translate-y-1/2">
+                        <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
+                          <div className="w-16 h-16 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-full flex items-center justify-center">
+                            <Star className="w-8 h-8 text-yellow-800 fill-current" />
+                          </div>
+                        </div>
+                        {/* Ribbon tails */}
+                        <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
+                          <div className="w-8 h-12 bg-gradient-to-b from-yellow-500 to-yellow-600 transform rotate-12 rounded-b"></div>
+                          <div className="w-8 h-12 bg-gradient-to-b from-yellow-500 to-yellow-600 transform -rotate-12 rounded-b absolute -left-4 top-0"></div>
+                        </div>
+                      </div>
+
+                      {/* Certificate header */}
+                      <div className="mb-6">
+                        <h1 className="text-4xl font-bold text-gray-800 mb-2 tracking-wider">CERTIFICATE</h1>
+                        <div className="w-32 h-px bg-gray-400 mx-auto mb-2"></div>
+                        <p className="text-lg text-gray-600 tracking-wider">OF ACHIEVEMENT</p>
+                        <div className="w-32 h-px bg-gray-400 mx-auto"></div>
+                      </div>
+
+                      {/* User name section */}
+                      <div className="mb-8 ml-16">
+                        <h2 className="text-3xl font-bold text-blue-900 mb-4">
+                          {user?.name || 'Your Name Here'}
+                        </h2>
+                        <p className="text-gray-600 text-lg leading-relaxed max-w-md">
+                          Has successfully completed the Data Science Fundamentals Quiz 
+                          with outstanding performance and dedication to learning.
+                        </p>
+                      </div>
+
+                      {/* Date and signature section */}
+                      <div className="flex justify-between items-end w-full mt-auto ml-16">
+                        <div className="text-center">
+                          <div className="w-32 h-px bg-gray-400 mb-2"></div>
+                          <p className="text-sm text-gray-600 font-medium">DATE</p>
+                          <p className="text-gray-800 font-semibold">
+                            {new Date().toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}
+                          </p>
+                        </div>
+                        
+                        <div className="text-center">
+                          <div className="w-32 h-px bg-gray-400 mb-2"></div>
+                          <p className="text-sm text-gray-600 font-medium">SIGNATURE</p>
+                          <p className="text-gray-800 font-semibold italic">EduQuest Team</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                
-                <h1 className="text-3xl font-bold text-gray-800 mb-4">Certificate of Achievement</h1>
-                
-                <div className="mb-6">
-                  <p className="text-gray-600 mb-2">This is to certify that</p>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Your Name Here</h2>
-                  <p className="text-gray-600">has successfully completed the</p>
-                  <h3 className="text-xl font-semibold text-blue-600 mt-2">Data Science Fundamentals Quiz</h3>
-                </div>
-                
-                <div className="mb-6">
-                  <div className="text-4xl font-bold text-green-500 mb-2">85%</div>
-                  <p className="text-gray-600">Score achieved on completion</p>
-                </div>
-                
-                <div className="flex justify-center space-x-4 mb-6">
-                  <button className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-300 transform hover:scale-105">
-                    <Download size={20} />
-                    <span>Download</span>
-                  </button>
-                  <button className="flex items-center space-x-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-semibold transition-all duration-300">
-                    <Eye size={20} />
-                    <span>View Full</span>
-                  </button>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <p className="text-sm text-gray-500">© 2025 EduQuest - Issued on completion of quiz requirements</p>
-                </div>
+              </div>
+              
+              {/* Action buttons */}
+              <div className="flex justify-center space-x-4 mt-8">
+                <button className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-300 transform hover:scale-105">
+                  <Download size={20} />
+                  <span>Download Certificate</span>
+                </button>
+                <button className="flex items-center space-x-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-semibold transition-all duration-300">
+                  <Eye size={20} />
+                  <span>View Full Size</span>
+                </button>
               </div>
               
               <button
