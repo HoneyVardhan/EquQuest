@@ -17,6 +17,11 @@ import {
   checkPremiumStatus,
   checkEmailVerification
 } from '../utils/supabaseEnhanced';
+import {
+  saveQuizProgress,
+  loadQuizProgress,
+  clearQuizProgress
+} from '../utils/quizProgress';
 import { toast } from "sonner";
 import { Question } from '../data/questions/data-science';
 
@@ -41,6 +46,7 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
   const [specialQuestion, setSpecialQuestion] = useState(null);
   const [showSpecialQuestion, setShowSpecialQuestion] = useState(false);
   const [quizSessionId, setQuizSessionId] = useState<string | null>(null);
+  const [progressLoaded, setProgressLoaded] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -83,15 +89,28 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
     checkUserStatus();
   }, [isAuthenticated, topicId, navigate]);
 
-  // Initialize component state
+  // Load quiz progress and initialize component state
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || progressLoaded) return;
 
     const initializeQuiz = async () => {
       try {
-        if (selectedAnswers.length === 0) {
+        // Load saved progress
+        const savedProgress = await loadQuizProgress(topicId);
+        
+        if (savedProgress && savedProgress.answers.length > 0) {
+          // Resume from saved progress
+          setCurrentQuestion(savedProgress.current_question - 1); // Convert to 0-based index
+          setSelectedAnswers(savedProgress.answers);
+          toast.success('Resumed from saved progress!');
+          console.log('📂 Resumed quiz from question:', savedProgress.current_question);
+        } else {
+          // Start fresh
           setSelectedAnswers(new Array(questions.length).fill(null));
+          console.log('🆕 Starting fresh quiz');
         }
+        
+        setProgressLoaded(true);
         
         // Start quiz session
         if (!quizSessionId) {
@@ -112,12 +131,13 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
           }, 1000);
         }
       } catch (error) {
+        console.error('❌ Error initializing quiz:', error);
         toast.error('Failed to initialize quiz. Please refresh and try again.');
       }
     };
 
     initializeQuiz();
-  }, [questions.length, selectedAnswers.length, isAuthenticated, topicId, quizSessionId]);
+  }, [questions.length, isAuthenticated, topicId, quizSessionId, progressLoaded]);
 
   const handleAnswerSelect = async (answerIndex: number) => {
     if (selectedAnswers[currentQuestion] !== null) return;
@@ -128,6 +148,9 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
       setSelectedAnswers(newAnswers);
       setShowExplanation(true);
       
+      // Save progress to Supabase after each answer
+      await saveQuizProgress(topicId, currentQuestion + 2, newAnswers); // +2 because we want next question number (1-based)
+      
       // If answer is wrong, save to Supabase
       if (answerIndex !== questions[currentQuestion].correctAnswer) {
         await saveWrongAnswerToSupabase(questions[currentQuestion], topicId);
@@ -136,6 +159,7 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
         toast.success("Great job! That's correct!");
       }
     } catch (error) {
+      console.error('❌ Error in handleAnswerSelect:', error);
       toast.error('Failed to save answer. Please try again.');
     }
   };
@@ -149,13 +173,20 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
       }
       
       if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1);
+        const nextQuestionIndex = currentQuestion + 1;
+        setCurrentQuestion(nextQuestionIndex);
         setShowExplanation(false);
+        
+        // Save progress with next question number
+        await saveQuizProgress(topicId, nextQuestionIndex + 1, selectedAnswers);
       } else {
         // Quiz completion logic
         const score = selectedAnswers.filter((answer, index) => answer === questions[index].correctAnswer).length;
         
         try {
+          // Clear progress since quiz is complete
+          await clearQuizProgress(topicId);
+          
           // End quiz session
           if (quizSessionId) {
             await endQuizSession(quizSessionId, score);
@@ -186,12 +217,14 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
           
           toast.success('Quiz completed successfully!');
         } catch (error) {
+          console.error('❌ Error completing quiz:', error);
           toast.error('Error saving quiz results. Please try again.');
         }
         
         setIsQuizComplete(true);
       }
     } catch (error) {
+      console.error('❌ Error in handleNextQuestion:', error);
       toast.error('Failed to proceed to next question. Please try again.');
     }
   };
@@ -243,7 +276,7 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
     streak,
     specialQuestion,
     showSpecialQuestion,
-    loading,
+    loading: loading || !progressLoaded,
     handleAnswerSelect,
     handleNextQuestion,
     toggleExplanation,
