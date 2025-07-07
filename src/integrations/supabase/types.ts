@@ -241,7 +241,7 @@ export type Database = {
         Insert: {
           answers?: Json | null
           current_question?: number | null
-          id: string
+          id?: string
           topic_id: string
           user_id?: string | null
         }

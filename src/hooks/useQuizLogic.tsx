@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
@@ -148,8 +147,13 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
       setSelectedAnswers(newAnswers);
       setShowExplanation(true);
       
-      // Save progress to Supabase after each answer
-      await saveQuizProgress(topicId, currentQuestion + 2, newAnswers); // +2 because we want next question number (1-based)
+      // Save progress to Supabase after each answer (fail silently)
+      try {
+        await saveQuizProgress(topicId, currentQuestion + 2, newAnswers); // +2 because we want next question number (1-based)
+      } catch (error) {
+        console.error('❌ Error saving quiz progress (silent):', error);
+        // Continue without showing any error to the user
+      }
       
       // If answer is wrong, save to Supabase
       if (answerIndex !== questions[currentQuestion].correctAnswer) {
@@ -160,7 +164,7 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
       }
     } catch (error) {
       console.error('❌ Error in handleAnswerSelect:', error);
-      toast.error('Failed to save answer. Please try again.');
+      // Remove the error toast - let the app continue silently
     }
   };
 
@@ -177,8 +181,13 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
         setCurrentQuestion(nextQuestionIndex);
         setShowExplanation(false);
         
-        // Save progress with next question number
-        await saveQuizProgress(topicId, nextQuestionIndex + 1, selectedAnswers);
+        // Save progress with next question number (fail silently)
+        try {
+          await saveQuizProgress(topicId, nextQuestionIndex + 1, selectedAnswers);
+        } catch (error) {
+          console.error('❌ Error saving quiz progress (silent):', error);
+          // Continue without showing any error to the user
+        }
       } else {
         // Quiz completion logic
         const score = selectedAnswers.filter((answer, index) => answer === questions[index].correctAnswer).length;
