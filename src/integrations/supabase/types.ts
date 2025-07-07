@@ -129,11 +129,13 @@ export type Database = {
         Row: {
           avatar_url: string
           created_at: string
+          current_streak: number | null
           email: string
           email_confirmed_at: string
           full_name: string
           id: string
           is_premium: boolean
+          max_streak: number | null
           notification_preferences: Json
           onboarding_completed: boolean
           preferred_language: string
@@ -143,11 +145,13 @@ export type Database = {
         Insert: {
           avatar_url: string
           created_at?: string
+          current_streak?: number | null
           email: string
           email_confirmed_at: string
           full_name: string
           id: string
           is_premium?: boolean
+          max_streak?: number | null
           notification_preferences?: Json
           onboarding_completed?: boolean
           preferred_language?: string
@@ -157,11 +161,13 @@ export type Database = {
         Update: {
           avatar_url?: string
           created_at?: string
+          current_streak?: number | null
           email?: string
           email_confirmed_at?: string
           full_name?: string
           id?: string
           is_premium?: boolean
+          max_streak?: number | null
           notification_preferences?: Json
           onboarding_completed?: boolean
           preferred_language?: string

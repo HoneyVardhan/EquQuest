@@ -21,6 +21,7 @@ import {
   loadQuizProgress,
   clearQuizProgress
 } from '../utils/quizProgress';
+import { updateUserStreak, getCurrentStreak } from '../utils/streakSystem';
 import { toast } from "sonner";
 import { Question } from '../data/questions/data-science';
 
@@ -41,7 +42,7 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
   const [isPremium, setIsPremium] = useState(false);
   const [cooldownActive, setCooldownActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [streak, setStreak] = useState(0);
+  const [streak, setStreak] = useState(1);
   const [specialQuestion, setSpecialQuestion] = useState(null);
   const [showSpecialQuestion, setShowSpecialQuestion] = useState(false);
   const [quizSessionId, setQuizSessionId] = useState<string | null>(null);
@@ -117,9 +118,9 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
           setQuizSessionId(sessionId);
         }
         
-        // Load streak data from Supabase
-        const userStreak = await getUserStreak();
-        setStreak(userStreak);
+        // Load current streak from profile
+        const streakData = await getCurrentStreak();
+        setStreak(streakData.current_streak);
         
         // Check for special question of the day
         const todaysSpecialQuestion = await getSpecialQuestionFromSupabase();
@@ -155,8 +156,14 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
         // Continue without showing any error to the user
       }
       
+      const isCorrect = answerIndex === questions[currentQuestion].correctAnswer;
+      
+      // Update streak based on answer correctness
+      const streakData = await updateUserStreak(isCorrect);
+      setStreak(streakData.current_streak);
+      
       // If answer is wrong, save to Supabase
-      if (answerIndex !== questions[currentQuestion].correctAnswer) {
+      if (!isCorrect) {
         await saveWrongAnswerToSupabase(questions[currentQuestion], topicId);
         toast.error("Oops! That wasn't the right answer.");
       } else {
@@ -220,9 +227,9 @@ export const useQuizLogic = ({ topicId, questions, topicName }: UseQuizLogicProp
             }
           }
           
-          // Update streak
-          const updatedStreak = await getUserStreak();
-          setStreak(updatedStreak);
+          // Update streak display with final values
+          const finalStreakData = await getCurrentStreak();
+          setStreak(finalStreakData.current_streak);
           
           toast.success('Quiz completed successfully!');
         } catch (error) {
