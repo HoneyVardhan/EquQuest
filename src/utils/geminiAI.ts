@@ -1,7 +1,10 @@
+
 export interface GeminiResponse {
   candidates: Array<{
     content: {
-      content: string; // Updated per Gemini API response format
+      parts: Array<{
+        text: string;
+      }>;
     };
   }>;
 }
@@ -26,10 +29,10 @@ export interface AIMessage {
   context?: any;
 }
 
-// Use env variable or fallback to hardcoded key (replace YOUR_API_KEY_HERE)
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'YOUR_API_KEY_HERE';
+// Use env variable or fallback to hardcoded key
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAHiQs5phbNmN7sjtlb3BOw7X8rrFoPdIw';
 
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-pro/chat:generate?key=${GEMINI_API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
 
 /**
  * Calls the Google Gemini AI API
@@ -66,15 +69,22 @@ Please explain why this is the correct answer and help the user understand the c
 Provide clear, educational explanations and study tips. Topic: ${context.topic || 'General'}`;
     }
 
-    // Prepare request body following Gemini API spec
+    // Prepare request body following correct Gemini API spec
     const body = {
-      messages: [
-        { author: 'system', content: systemPrompt },
-        { author: 'user', content: question }
+      contents: [
+        {
+          parts: [
+            {
+              text: `${systemPrompt}\n\nUser question: ${question}`
+            }
+          ]
+        }
       ],
-      temperature: 0.7,
-      candidateCount: 1,
-      maxOutputTokens: 1024
+      generationConfig: {
+        temperature: 0.7,
+        candidateCount: 1,
+        maxOutputTokens: 1024
+      }
     };
 
     // Make API call
@@ -86,13 +96,15 @@ Provide clear, educational explanations and study tips. Topic: ${context.topic |
 
     if (!response.ok) {
       console.error('❌ Gemini API error:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('Error details:', errorText);
       throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
 
     const data: GeminiResponse = await response.json();
 
-    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.content) {
-      const aiResponse = data.candidates[0].content.content;
+    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+      const aiResponse = data.candidates[0].content.parts[0].text;
       console.log('🎯 AI Response:', aiResponse.substring(0, 100) + '...');
       return aiResponse;
     } else {
