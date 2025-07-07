@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, MessageCircle, Send, Bot, Sparkles } from 'lucide-react';
@@ -40,8 +41,16 @@ const Contact = () => {
     setIsAiLoading(true);
     console.log('🤖 Processing AI question:', aiQuestion);
     
+    // Show non-blocking loading message
+    const loadingToast = toast.loading('🤖 AI is analyzing your question...', {
+      duration: 0 // Keep it until we dismiss it
+    });
+    
     try {
       const response = await callGeminiAPI(aiQuestion, { type: 'general' });
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
       
       // Save to localStorage for persistence
       saveAISession(aiQuestion, response, { type: 'general' });
@@ -53,7 +62,7 @@ const Contact = () => {
         type: 'general'
       });
       
-      toast.success('AI response received!');
+      toast.success('🎯 AI response received!');
       console.log('✅ AI response generated successfully');
       
       // Clear input
@@ -61,7 +70,52 @@ const Contact = () => {
       
     } catch (error) {
       console.error('❌ AI Error:', error);
-      toast.error('Failed to get AI response. Please try again.');
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+      
+      // Show friendly non-blocking notification
+      toast('🤖 AI is analyzing your question in the background. We\'ll notify you once your personalized response is ready.', {
+        duration: 5000,
+        style: {
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          border: 'none'
+        }
+      });
+      
+      // Retry in background after a delay
+      setTimeout(async () => {
+        try {
+          const retryResponse = await callGeminiAPI(aiQuestion, { type: 'general' });
+          
+          // Save to localStorage
+          saveAISession(aiQuestion, retryResponse, { type: 'general' });
+          
+          // Show success notification
+          toast.success('🎯 Your AI response is ready!', {
+            action: {
+              label: 'View',
+              onClick: () => {
+                setAiResponse({
+                  question: aiQuestion,
+                  response: retryResponse,
+                  type: 'general'
+                });
+              }
+            },
+            duration: 10000
+          });
+          
+          setAiQuestion('');
+          
+        } catch (retryError) {
+          console.error('❌ Retry failed:', retryError);
+          toast.error('AI service is temporarily unavailable. Please try again later.', {
+            duration: 5000
+          });
+        }
+      }, 10000); // Retry after 10 seconds
     } finally {
       setIsAiLoading(false);
     }
@@ -245,3 +299,4 @@ const Contact = () => {
 };
 
 export default Contact;
+

@@ -1,4 +1,5 @@
 
+
 export interface GeminiResponse {
   candidates: Array<{
     content: {
@@ -32,7 +33,8 @@ export interface AIMessage {
 // Use env variable or fallback to hardcoded key
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAHiQs5phbNmN7sjtlb3BOw7X8rrFoPdIw';
 
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+// Updated to use the correct current model
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 /**
  * Calls the Google Gemini AI API
@@ -48,6 +50,7 @@ export const callGeminiAPI = async (
 ): Promise<string> => {
   try {
     console.log('🤖 Calling Gemini AI with context:', context);
+    console.log('🔑 Using API key:', GEMINI_API_KEY ? 'Present' : 'Missing');
 
     // Default system prompt
     let systemPrompt = 'You are an AI assistant for EduQuest, an educational web application. Provide helpful, educational responses.';
@@ -87,6 +90,9 @@ Provide clear, educational explanations and study tips. Topic: ${context.topic |
       }
     };
 
+    console.log('📤 Sending request to:', GEMINI_API_URL);
+    console.log('📤 Request body:', JSON.stringify(body, null, 2));
+
     // Make API call
     const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
@@ -94,14 +100,26 @@ Provide clear, educational explanations and study tips. Topic: ${context.topic |
       body: JSON.stringify(body)
     });
 
+    console.log('📥 Response status:', response.status, response.statusText);
+
     if (!response.ok) {
-      console.error('❌ Gemini API error:', response.status, response.statusText);
       const errorText = await response.text();
-      console.error('Error details:', errorText);
+      console.error('❌ Gemini API error:', response.status, response.statusText);
+      console.error('❌ Error details:', errorText);
+      
+      // Parse error details for better logging
+      try {
+        const errorData = JSON.parse(errorText);
+        console.error('❌ Parsed error:', errorData);
+      } catch (e) {
+        console.error('❌ Raw error text:', errorText);
+      }
+      
       throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
 
     const data: GeminiResponse = await response.json();
+    console.log('📥 Full response data:', JSON.stringify(data, null, 2));
 
     if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
       const aiResponse = data.candidates[0].content.parts[0].text;
